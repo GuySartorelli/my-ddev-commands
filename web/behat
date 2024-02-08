@@ -1,0 +1,20 @@
+#!/bin/bash
+
+## Description: Run behat tests in the web container (deletes artifacts first)
+## Usage: behat 
+## Example: "ddev behat [options] [<module>] [<paths>]"
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: true
+
+# Delete old artifacts first (from opinionated directory)
+[[ -n "$(ls .eddev/artifacts/ 2>/dev/null)" ]] && rm -r .eddev/artifacts/*;
+
+# If no tags option was passed, default to "--tags=gsat"
+# I typically only want to run a given test at a time, and this is my opinionated way of identifying it.
+if [[ $* != *--tags* ]]; then
+    set -- "--tags=gsat" "$@"
+fi
+
+# Run behat
+behat "$@"

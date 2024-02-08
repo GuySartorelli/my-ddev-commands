@@ -1,0 +1,10 @@
+#!/bin/bash
+
+## Description: Shortcut for running Silverstripe `sake dev flush=1`
+## Usage: flush
+## Example: "ddev flush"
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: false
+
+sake dev flush=1

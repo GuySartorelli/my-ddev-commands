@@ -1,0 +1,4 @@
+./.git
+./.links-ignore
+./make-links.sh
+./README.md

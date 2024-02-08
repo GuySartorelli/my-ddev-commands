@@ -1,0 +1,9 @@
+#!/bin/bash
+
+## Description: Run Silverstripe sake CLI inside the web container
+## Usage: sake [flags] [args]
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: true
+
+sake "$@"
