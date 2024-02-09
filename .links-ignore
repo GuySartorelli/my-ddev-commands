@@ -1,4 +1,7 @@
+./.php-utils/vendor
+./.php-utils/composer.lock
 ./.git
+./.gitignore
 ./.links-ignore
 ./make-links.sh
 ./README.md

@@ -14,3 +14,19 @@ stow --target=$HOME/.ddev/commands .
 > ```bash
 > ./make-links.sh
 > ```
+
+## Installation
+
+1. clone the repo somewhere
+1. run the above command to make the links
+1. run composer install (in the `~/.ddev` copy, not the place you just cloned to!!)
+
+   ```bash
+   cd "$HOME/.ddev/commands/.php-utils"
+   composer install
+   ```
+
+1. enjoy.
+
+> [!NOTE]
+> You may need to run `ddev start` or `ddev debug fix-commands` on any projects that were already running.
