@@ -12,7 +12,7 @@
 
 use Gitonomy\Git\Repository;
 use GuySartorelli\DdevPhpUtils\Output;
-use Symfony\Component\Console\Input\ArgvInput;
+use GuySartorelli\DdevPhpUtils\Validation;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Filesystem\Path;
@@ -26,8 +26,6 @@ if (!file_exists($autoload)) {
     throw new RuntimeException('autoload file is missing - make sure you ran `composer install`.');
 }
 include_once $autoload;
-
-$output = new Output();
 
 $definition = new InputDefinition([
     new InputOption(
@@ -50,15 +48,17 @@ $definition = new InputDefinition([
         'Run git fetch after defining remotes'
     ),
 ]);
-$input = new ArgvInput(definition: $definition);
-$input->validate();
+$input = Validation::validate($definition);
 
 $gitRepo = new Repository(Path::canonicalize('./'));
 $ccAccount = 'git@github.com:creative-commoners/';
 $securityAccount = 'git@github.com:silverstripe-security/';
 $prefixAndOrgRegex = '#^(?>git@github\.com:|https://github\.com/).*/#';
 
-$originUrl = trim($gitRepo->run('remote', ['get-url', 'origin']));
+$remotes = explode("\n", trim($gitRepo->run('remote', ['show'])));
+$origin = in_array('origin', $remotes) ? 'origin' : 'orig';
+
+$originUrl = trim($gitRepo->run('remote', ['get-url', $origin]));
 
 // Validate origin URL
 if (!preg_match($prefixAndOrgRegex, $originUrl)) {
@@ -67,26 +67,38 @@ if (!preg_match($prefixAndOrgRegex, $originUrl)) {
 
 // Add remotes
 if ($input->getOption('security')) {
-    // Add security remote
-    $output->step('Adding the security remote');
-    $securityRemote = preg_replace($prefixAndOrgRegex, $securityAccount, $originUrl);
-    $gitRepo->run('remote', ['add', 'security', $securityRemote]);
+    if (in_array('security', $remotes)) {
+        Output::step('security remote already exists');
+    } else {
+        // Add security remote
+        Output::step('Adding the security remote');
+        $securityRemote = preg_replace($prefixAndOrgRegex, $securityAccount, $originUrl);
+        $gitRepo->run('remote', ['add', 'security', $securityRemote]);
+    }
 } else {
-    // Add cc remote
-    $output->step('Adding the creative-commoners remote');
-    $ccRemote = preg_replace($prefixAndOrgRegex, $ccAccount, $originUrl);
-    $gitRepo->run('remote', ['add', 'cc', $ccRemote]);
+    if (in_array('cc', $remotes)) {
+        Output::step('cc remote already exists');
+    } else {
+        // Add cc remote
+        Output::step('Adding the creative-commoners remote');
+        $ccRemote = preg_replace($prefixAndOrgRegex, $ccAccount, $originUrl);
+        $gitRepo->run('remote', ['add', 'cc', $ccRemote]);
+    }
 }
 
 // Rename origin
 if ($input->getOption('rename-origin')) {
-    $output->step('Renaming the origin remote');
-    $gitRepo->run('remote', ['rename', 'origin', 'orig']);
+    if (in_array('orig', $remotes)) {
+        Output::step('origin remote already renamed');
+    } else {
+        Output::step('Renaming the origin remote');
+        $gitRepo->run('remote', ['rename', 'origin', 'orig']);
+    }
 }
 
 // Fetch
 if ($input->getOption('fetch')) {
-    $output->step('Fetching all remotes');
+    Output::step('Fetching all remotes');
     $gitRepo->run('fetch', ['--all']);
 }
 
@@ -94,5 +106,4 @@ $successMsg = 'Remotes added';
 if ($input->getOption('fetch')) {
     $successMsg .= ' and fetched';
 }
-
-$output->success($successMsg);
+Output::success($successMsg);

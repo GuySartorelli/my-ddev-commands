@@ -10,30 +10,31 @@ final class Output
 {
     private const STYLE_END = '</>';
 
-    private SymfonyStyle $output;
-    
-    public function __construct()
+    private static SymfonyStyle $output;
+
+    public static function init(bool $verbose): void
     {
-        $this->output = new SymfonyStyle(new ArrayInput([]), new ConsoleOutput());
+        $verbosity = $verbose ? ConsoleOutput::VERBOSITY_VERY_VERBOSE : ConsoleOutput::VERBOSITY_NORMAL;
+        self::$output = new SymfonyStyle(new ArrayInput([]), new ConsoleOutput(verbosity: $verbosity));
     }
 
     /**
      * Nice standardised output style for outputting step information
      */
-    public function step(string $output): void
+    public static function step(string $output): void
     {
-        // $this->clearProgressBar();
-        $this->output->writeln('<fg=blue>' . $output . self::STYLE_END);
+        // self::$clearProgressBar();
+        self::$output->writeln('<fg=blue>' . $output . self::STYLE_END);
     }
 
     /**
      * Outputs the message with nice "success" styling
      */
-    public function success(string $message): void
+    public static function success(string $message): void
     {
         // Retain background style inside any formatted sections
         $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1bg=bright-green;$2', $message);
         // Render the message
-        $this->output->block($message, 'OK', 'fg=black;bg=bright-green', padding: true, escape: false);
+        self::$output->block($message, 'OK', 'fg=black;bg=bright-green', padding: true, escape: false);
     }
 }
