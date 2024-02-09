@@ -17,6 +17,11 @@ while read file_to_link; do
         echo "File '$LINK_TO' already exists. Deleting it first."
         rm $LINK_TO
     fi
+    # make sure the directory exists so we can make a link in it
+    LINK_DIR=$(dirname $LINK_TO)
+    if [ ! -d $LINK_DIR ]; then
+        mkdir -p $LINK_DIR
+    fi
     # make link
     ln "${file_to_link/.\//$PWD\/}" $LINK_TO
 done < <(find . \( -path $IGNORE_PATHS \) -prune -o -type f -print)
