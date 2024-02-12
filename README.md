@@ -10,6 +10,7 @@ stow --target=$HOME/.ddev/commands .
 > Unfortunately that [isn't currently supported](https://github.com/ddev/ddev/issues/5806), so for now I have to use hard links. I've written a script to handle that for me.
 >
 > The script first deletes all old hard links in `$HOME/.ddev/commands`, then creates new hard links from any files not in the `.links-ignore` list.
+> Finally it creates a symlink for the `.php-utils/` directory since that doesn't get copied anywhere.
 >
 > ```bash
 > ./make-links.sh
@@ -19,10 +20,10 @@ stow --target=$HOME/.ddev/commands .
 
 1. clone the repo somewhere
 1. run the above command to make the links
-1. run composer install (in the `~/.ddev` copy, not the place you just cloned to!!)
+1. run composer install in `.php-utils/`
 
    ```bash
-   cd "$HOME/.ddev/commands/.php-utils"
+   cd .php-utils
    composer install
    ```
 

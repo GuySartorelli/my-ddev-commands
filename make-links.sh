@@ -6,7 +6,7 @@ COMMANDS_DIR="$HOME/.ddev/commands"
 while read hard_link; do
     rm $hard_link;
 done < <(find $COMMANDS_DIR -type f -links 2)
-echo "old links deleted"
+echo "old hard links deleted"
 
 # Then add new links (ignoring files or directories we explicitly want to ignore)
 IGNORE_PATHS=$(awk '{printf("%s%s", sep, $0); sep=" -o -path "} END {print ""}' .links-ignore)
@@ -25,4 +25,9 @@ while read file_to_link; do
     # make link
     ln "${file_to_link/.\//$PWD\/}" $LINK_TO
 done < <(find . \( -path $IGNORE_PATHS \) -prune -o -type f -print)
-echo "new links created"
+echo "new hard links created"
+
+# Finally clear and make a symlink for the .php-utils/ dir
+[[ -L "$COMMANDS_DIR/.php-utils" ]] && rm "$COMMANDS_DIR/.php-utils"
+ln -s "$PWD/.php-utils" "$COMMANDS_DIR/.php-utils"
+echo "symlink created for .php-utils/ dir"

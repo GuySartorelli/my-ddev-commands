@@ -1,5 +1,4 @@
-./.php-utils/vendor
-./.php-utils/composer.lock
+./.php-utils
 ./.git
 ./.gitignore
 ./.links-ignore
