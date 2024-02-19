@@ -1,5 +1,5 @@
 #!/usr/bin/env php
-<?php
+<?php declare(strict_types=1);
 
 // Based on https://gist.github.com/maxime-rainville/0e2cc280cc9d2e014a21b55a192076d9
 
