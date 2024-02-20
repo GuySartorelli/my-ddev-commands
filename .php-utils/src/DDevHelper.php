@@ -77,13 +77,7 @@ class DDevHelper
     }
 
     /**
-     * Gets the named piece of custom config from ~/.ddev/global_config.yaml
-     *
-     * Add config to that file under a `custom_commands_config` key, e.g:
-     * custom_commands_config:
-     *   someconfig: "some value"
-     *
-     * Will break when DDEV moved its main ddev directory...
+     * Gets the named piece of custom config from config.yml (see README)
      */
     public static function getCustomConfig(string $config): mixed
     {
