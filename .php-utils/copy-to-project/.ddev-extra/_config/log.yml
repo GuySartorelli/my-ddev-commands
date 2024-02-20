@@ -1,0 +1,12 @@
+---
+Name: eddev-error-logging
+---
+SilverStripe\Core\Injector\Injector:
+  Psr\Log\LoggerInterface.errorhandler:
+    calls:
+      LogFileHandler: [ pushHandler, [ '%$LogFileHandler' ] ]
+  LogFileHandler:
+    class: Monolog\Handler\StreamHandler
+    constructor:
+      - "/var/www/html/.ddev-extra/silverstripe.log"
+      - "debug"

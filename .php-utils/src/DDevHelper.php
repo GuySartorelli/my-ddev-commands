@@ -87,11 +87,11 @@ class DDevHelper
      */
     public static function getCustomConfig(string $config): mixed
     {
-        $filePath = Path::join(Path::getHomeDirectory(), '.ddev', 'global_config.yaml');
+        $filePath = Path::join(__DIR__, '..', 'config.yml');
         if (!file_exists($filePath)) {
             throw new RuntimeException("File $filePath does not exist!");
         }
         $parsed = Yaml::parseFile($filePath, Yaml::PARSE_OBJECT_FOR_MAP);
-        return $parsed?->custom_commands_config?->$config;
+        return $parsed?->$config;
     }
 }

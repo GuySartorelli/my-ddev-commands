@@ -1,0 +1,14 @@
+---
+Name: eddev-emailconfig-cms4
+Only:
+  classexists: SilverStripe\Control\Email\SwiftMailer
+After:
+  - '#project-emailconfig'
+---
+SilverStripe\Core\Injector\Injector:
+  Swift_Transport:
+    class: Swift_SmtpTransport
+  properties:
+    Host: localhost
+    Port: 1025
+    Encryption: null

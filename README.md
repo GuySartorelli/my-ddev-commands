@@ -27,21 +27,18 @@ stow --target=$HOME/.ddev/commands .
    composer install
    ```
 
-1. enjoy.
+1. create a `/.php-utils/config.yml` file:
 
-> [!NOTE]
-> You may need to run `ddev start` or `ddev debug fix-commands` on any projects that were already running.
-
-## Configuration
-
-You might want/need to add some lil bits to the `global_config.yaml` file for DDEV:
-
-```yaml
-custom_commands_config:
+    ```yaml
     # Path that projects created with `ddev create` will live in
     projects_path: "~/projects"
     # Path that `ddev clone` will clone into
     clone_dir: "~/dump/temp"
     # Token used for github API when fetching PR info
     github_token: "YOUR_TOKEN_HERE"
-```
+    ```
+
+1. enjoy.
+
+> [!NOTE]
+> You may need to run `ddev start` or `ddev debug fix-commands` on any projects that were already running.

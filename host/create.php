@@ -19,8 +19,6 @@ use GuySartorelli\DdevPhpUtils\Validation;
 use Packagist\Api\Client as PackagistClient;
 use Packagist\Api\PackageNotFoundException;
 use Packagist\Api\Result\Package\Version;
-use RecursiveDirectoryIterator;
-use RuntimeException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
@@ -521,7 +519,6 @@ function setupComposerProject(): bool
 
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');
-    includeOptionalModule('silverstripe/dynamodb:' . $input->getOption('constraint'), (bool) $input->getOption('include-dynamodb'));
     includeOptionalModule('behat/mink-selenium2-driver', isDev: true);
     includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
@@ -606,12 +603,12 @@ function checkoutPRs(): bool
  */
 function copyProjectFiles(): bool
 {
-    global $filesystem, $projectRoot;
+    global $filesystem, $projectRoot, $commandsDir;
     Output::step('Copying opinionated files to project');
     try {
         // Copy files through (config, .env, etc)
         $filesystem->mirror(
-            Path::join(__DIR__, '../..', 'copy-to-project'),
+            Path::join($commandsDir, '.php-utils', 'copy-to-project'),
             $projectRoot,
             options: ['override' => true]
         );
