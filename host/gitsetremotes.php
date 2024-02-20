@@ -23,7 +23,8 @@ $commandsDir = $_SERVER['HOME'] . '/.ddev/commands';
 // Make sure autoload exists and include it
 $autoload = $commandsDir . '/.php-utils/vendor/autoload.php';
 if (!file_exists($autoload)) {
-    throw new RuntimeException('autoload file is missing - make sure you ran `composer install`.');
+    echo 'autoload file is missing - make sure you ran `composer install`.' . PHP_EOL;
+    exit(1);
 }
 include_once $autoload;
 
