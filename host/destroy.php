@@ -62,8 +62,9 @@ if (!$found) {
 // Execution
 Output::step("Destroying project $projectName");
 
-Output::step("Shutting down DDEV project");
 chdir($projectRoot);
+
+Output::step("Shutting down DDEV project");
 $success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y']);
 if (!$success) {
     Output::error('Could not shut down DDEV project.');

@@ -17,6 +17,8 @@ final class Output
 
     private static ?ProgressBar $progressBar = null;
 
+    private static bool $progressBarDisplayed = false;
+
     public static function init(bool $verbose): void
     {
         $verbosity = $verbose ? ConsoleOutput::VERBOSITY_DEBUG : ConsoleOutput::VERBOSITY_NORMAL;
@@ -124,7 +126,10 @@ final class Output
             self::$progressBar->setBarWidth($barWidth);
             self::$progressBar->setMessage('');
         }
-        self::$progressBar->display();
+        if (!self::$progressBarDisplayed) {
+            self::$progressBar->display();
+            self::$progressBarDisplayed = true;
+        }
 
         if ($message !== null) {
             // Make sure messages can't span multiple lines - truncate if necessary
@@ -147,7 +152,10 @@ final class Output
      */
     public static function clearProgressBar(): void
     {
-        self::$progressBar?->clear();
+        if (self::$progressBarDisplayed) {
+            self::$progressBar?->clear();
+            self::$progressBarDisplayed = false;
+        }
     }
 
     /**
