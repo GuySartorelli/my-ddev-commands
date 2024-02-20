@@ -8,7 +8,7 @@
 ## ExecRaw: true
 
 # Delete old artifacts first (from opinionated directory)
-[[ -n "$(ls .eddev/artifacts/ 2>/dev/null)" ]] && rm -r .eddev/artifacts/*;
+[[ -n "$(ls .ddev-extra/artifacts/ 2>/dev/null)" ]] && rm -r .eddev/artifacts/*;
 
 # If no tags option was passed, default to "--tags=gsat"
 # I typically only want to run a given test at a time, and this is my opinionated way of identifying it.
