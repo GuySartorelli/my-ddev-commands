@@ -23,6 +23,11 @@ final class Output
         self::$output = new SymfonyStyle(new ArrayInput([]), new ConsoleOutput(verbosity: $verbosity));
     }
 
+    public static function getIO(): SymfonyStyle
+    {
+        return self::$output;
+    }
+
     public static function isVerbose(): bool
     {
         return self::$output->isVerbose();
@@ -45,6 +50,17 @@ final class Output
     {
         self::clearProgressBar();
         self::$output->writeln('<fg=blue>' . $message . self::STYLE_END);
+    }
+
+
+    /**
+     * Nice standardised output style for outputting sub-step information.
+     * Also clears any progress bars in progress.
+     */
+    public static function subStep(string $output): void
+    {
+        self::clearProgressBar();
+        self::$output->writeln('<fg=gray>' . $output . self::STYLE_END);
     }
 
     /**

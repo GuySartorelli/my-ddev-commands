@@ -2,8 +2,11 @@
 
 namespace GuySartorelli\DdevPhpUtils;
 
+use RuntimeException;
 use stdClass;
+use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Yaml\Yaml;
 
 class DDevHelper
 {
@@ -71,5 +74,24 @@ class DDevHelper
     public static function getProjectDetails(string $project = ''): ?stdClass
     {
         return static::runJson('describe', $project ? [$project] : []);
+    }
+
+    /**
+     * Gets the named piece of custom config from ~/.ddev/global_config.yaml
+     *
+     * Add config to that file under a `custom_commands_config` key, e.g:
+     * custom_commands_config:
+     *   someconfig: "some value"
+     *
+     * Will break when DDEV moved its main ddev directory...
+     */
+    public static function getCustomConfig(string $config): mixed
+    {
+        $filePath = Path::join(Path::getHomeDirectory(), '.ddev', 'global_config.yaml');
+        if (!file_exists($filePath)) {
+            throw new RuntimeException("File $filePath does not exist!");
+        }
+        $parsed = Yaml::parseFile($filePath, Yaml::PARSE_OBJECT_FOR_MAP);
+        return $parsed?->custom_commands_config?->$config;
     }
 }
