@@ -31,3 +31,17 @@ stow --target=$HOME/.ddev/commands .
 
 > [!NOTE]
 > You may need to run `ddev start` or `ddev debug fix-commands` on any projects that were already running.
+
+## Configuration
+
+You might want/need to add some lil bits to the `global_config.yaml` file for DDEV:
+
+```yaml
+custom_commands_config:
+    # Path that projects created with `ddev create` will live in
+    projects_path: "~/projects"
+    # Path that `ddev clone` will clone into
+    clone_dir: "~/dump/temp"
+    # Token used for github API when fetching PR info
+    github_token: "YOUR_TOKEN_HERE"
+```
