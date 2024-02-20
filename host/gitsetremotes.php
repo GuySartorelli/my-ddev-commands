@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Filesystem\Path;
 
-// Because of siliness, this could be in either the project's .ddev/.global_commands/host/ or $HOME/.ddev/commands/host/
+// Because of silliness, this could be in either the project's .ddev/.global_commands/host/ or $HOME/.ddev/commands/host/
 $commandsDir = $_SERVER['HOME'] . '/.ddev/commands';
 
 // Make sure autoload exists and include it

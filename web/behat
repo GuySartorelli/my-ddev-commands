@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Description: Run behat tests in the web container (deletes artifacts first)
-## Usage: behat 
+## Usage: behat
 ## Example: "ddev behat [options] [<module>] [<paths>]"
 # Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
 ## ProjectTypes: silverstripe, php

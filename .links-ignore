@@ -4,3 +4,4 @@
 ./.links-ignore
 ./make-links.sh
 ./README.md
+./.editorconfig
