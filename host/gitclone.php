@@ -3,6 +3,7 @@
 
 ## Usage: clone <git-repo-or-identifier>
 ## Description: Clone a git repo and optionally check out a PR based on the URL into a predetermined directory.
+## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 

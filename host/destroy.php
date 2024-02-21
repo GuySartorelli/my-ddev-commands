@@ -3,6 +3,7 @@
 
 ## Usage: destroy <project>
 ## Description: Fully destroy a project, removing all trace of its existence from the face of the... well, the computer.
+## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 
