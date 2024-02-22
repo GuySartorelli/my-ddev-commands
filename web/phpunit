@@ -1,0 +1,78 @@
+#!/bin/bash
+
+## Description: Run PHPUnit tests on modules in the vendor dir.
+## Usage: phpunit [options] -- [extra-phpunit-options]
+## Flags: [{"Name":"module","Shorthand":"m","Type":"string","Usage":"A specific module for which to run tests. Can be used to narrow the search for test classes, or used without \"class\" to run all tests for that module."},{"Name":"class","Shorthand":"c","Type":"string","Usage":"A specific test class to run tests in"},{"Name":"filter","Shorthand":"f","Type":"string","Usage":"Filter which tests to run"}]
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: true
+
+VENDOR_DIR="{$DDEV_APPROOT}/vendor"
+ARGS=()
+
+# Parse flags
+OPTS=$(getopt -o 'm:c:f:' --long 'module:,class:,filter:' -n 'ddev.phpunit' -- "$@")
+eval set -- "$OPTS"
+while true; do
+	case "$1" in
+        '-m'|'--module')
+			MODULE_NAME=$2
+            shift 2
+            continue
+        ;;
+		'-c'|'--class')
+			CLASS_NAME=$2
+			shift 2
+			continue
+		;;
+		'-f'|'--filter')
+			ARGS+=("--filter=$2")
+			shift 2
+			continue
+		;;
+		'--')
+			shift
+			break
+		;;
+		*)
+			echo "Internal error! got '$1'" >&2
+			exit 1
+		;;
+	esac
+done
+
+# If there's a module name, use it as a starting point for the test dir
+if [ -n "$MODULE_NAME" ]; then
+    if [[ $MODULE_NAME == *"/"* ]]; then
+        LOOK_FOR=$MODULE_NAME
+    else
+        LOOK_FOR="**/$MODULE_NAME"
+    fi
+    MODULE_DIR=$(find "vendor" -maxdepth 2 -type d -path "vendor/$LOOK_FOR")
+    if [ -z "$MODULE_DIR" ]; then
+        echo "Module '$MODULE_NAME' was not found."
+        exit 1
+    fi
+fi
+
+# If there's a module name, test only that class
+if [ -n "$CLASS_NAME" ]; then
+    if [ -n "$MODULE_DIR" ]; then
+        CLASS_PATH=$(find "$MODULE_DIR/tests" -type f -path "**/$CLASS_NAME.php")
+    else
+        CLASS_PATH=$(find "vendor" -type f -path "**/$CLASS_NAME.php")
+    fi
+    if [ -z "$CLASS_PATH" ]; then
+        echo "Class '$CLASS_NAME' was not found."
+        exit 1
+    fi
+    ARGS+=($CLASS_PATH)
+else
+    ARGS+=($MODULE_DIR)
+fi
+
+echo 'Removing old cache.'
+rm -r "silverstripe-cache" && mkdir "silverstripe-cache" || true
+
+echo 'Running PHPUnit.'
+phpunit "$ARGS" "$@"
