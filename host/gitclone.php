@@ -39,7 +39,7 @@ $definition = new InputDefinition([
 $input = Validation::validate($definition);
 
 $identifier = $input->getArgument('identifier');
-$repoDetails = GitHubService::getRepositoryDetails($identifier, DDevHelper::getCustomConfig('github_token'));
+$repoDetails = GitHubService::getRepositoryDetails($identifier);
 
 $cloneDir = Path::canonicalize(DDevHelper::getCustomConfig('clone_dir'));
 if (!is_dir($cloneDir)) {

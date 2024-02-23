@@ -10,46 +10,64 @@ use RuntimeException;
 
 final class GitHubService
 {
+    private static ?GithubClient $client = null;
+
+    /**
+     * Get the composer.json contents for a GitHub repository from a URL or org/repo formatted string.
+     * @throws RuntimeException if the file can't be fetched or is invalid JSON.
+     */
+    public static function getComposerJsonForIdentifier(string $repoIdentifier, string $branch = null): \stdClass
+    {
+        $client = self::getClient();
+        $parsedIdentifier = self::parseIdentifier($repoIdentifier);
+
+        try {
+            $composerJson = $client->repo()->contents()->download($parsedIdentifier['org'], $parsedIdentifier['repo'], 'composer.json', $branch);
+        } catch (GitHubRuntimeException $e) {
+            throw new RuntimeException("Couldn't find composer.json for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
+        }
+
+        $json = json_decode($composerJson, false);
+        if ($json === null) {
+            $error = json_last_error_msg();
+            throw new RuntimeException("Composer.json wasn't correctly parsed for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: $error");
+        }
+        return $json;
+    }
+
     /**
      * Get the full set of details of a GitHub repository from a URL or org/repo#123 formatted string.
      *
      * If the identifier includes a pull request reference, details about the pull request are aso included.
      */
-    public static function getRepositoryDetails(string $repoIdentifier, string $githubToken = ''): array
+    public static function getRepositoryDetails(string $repoIdentifier): array
     {
-        $client = new GithubClient();
-        if ($githubToken) {
-            $client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
-        }
         $parsed = self::parseIdentifier($repoIdentifier);
         $nameForOutput = "{$parsed['org']}/{$parsed['repo']}";
         try {
-            $nameForOutput = self::getComposerNameForIdentifier($client, $parsed);
+            $nameForOutput = self::getComposerNameForIdentifier($repoIdentifier);
         } catch (RuntimeException) {}
         return [
             ...$parsed,
             'outputName' => $nameForOutput,
             'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
-            'pr' => isset($parsed['pr']) ? self::getPRDetails($client, $parsed) : null,
+            'pr' => isset($parsed['pr']) ? self::getPRDetails($parsed) : null,
         ];
     }
 
     /**
      * Get the full set of details of a GitHub pull request from an array of PR URLs or org/repo#123 formatted strings.
      */
-    public static function getPullRequestDetails(array $rawPRs, string $githubToken = '', bool $allowNonPr = false): array
+    public static function getPullRequestDetails(array $rawPRs, bool $allowNonPr = false): array
     {
         if (empty($rawPRs)) {
             return [];
         }
-        $client = new GithubClient();
-        if ($githubToken) {
-            $client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
-        }
+
         $prs = [];
         foreach ($rawPRs as $rawPR) {
             $parsed = self::parseIdentifier($rawPR);
-            $composerName = self::getComposerNameForIdentifier($client, $parsed);
+            $composerName = self::getComposerNameForIdentifier($rawPR);
 
             if (empty($parsed['pr'])) {
                 // If this is a fork but not a PR, we only need the parsed details and the remote details.
@@ -69,7 +87,7 @@ final class GitHubService
                 throw new InvalidArgumentException("cannot add multiple PRs for the same package: $composerName");
             }
 
-            $prs[$composerName] = self::getPRDetails($client, $parsed);
+            $prs[$composerName] = self::getPRDetails($parsed);
         }
         return $prs;
     }
@@ -92,15 +110,12 @@ final class GitHubService
     /**
      * Get the composer name of a project from the composer.json of a repo.
      */
-    private static function getComposerNameForIdentifier(GithubClient $client, array $parsedIdentifier): string
+    private static function getComposerNameForIdentifier(string $repoIdentifier): string
     {
-        try {
-            $composerJson = $client->repo()->contents()->download($parsedIdentifier['org'], $parsedIdentifier['repo'], 'composer.json');
-        } catch (GitHubRuntimeException $e) {
-            throw new RuntimeException("Couldn't find composer name for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
-        }
-        $composerName = json_decode($composerJson, true)['name'] ?? '';
+        $composerJson = self::getComposerJsonForIdentifier($repoIdentifier);
+        $composerName = $composerJson->name ?? '';
         if (!$composerName) {
+            $parsedIdentifier = self::parseIdentifier($repoIdentifier);
             throw new RuntimeException("Couldn't find composer name for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: No 'name' key in composer.json file");
         }
         return $composerName;
@@ -109,8 +124,9 @@ final class GitHubService
     /**
      * Get details about the PR from the github API
      */
-    private static function getPRDetails(GithubClient $client, array $parsedIdentifier): array
+    private static function getPRDetails(array $parsedIdentifier): array
     {
+        $client = self::getClient();
         $prDetails = $client->pullRequest()->show($parsedIdentifier['org'], $parsedIdentifier['repo'], $parsedIdentifier['pr']);
         $remote = $prDetails['head']['repo']['ssh_url'];
         $remoteName = self::getNameForRemote($remote);
@@ -139,5 +155,17 @@ final class GitHubService
             return 'security';
         }
         return 'pr';
+    }
+
+    private static function getClient(): GithubClient
+    {
+        if (self::$client === null) {
+            self::$client = new GithubClient();
+            $githubToken = DDevHelper::getCustomConfig('github_token');
+            if ($githubToken) {
+                self::$client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
+            }
+        }
+        return self::$client;
     }
 }

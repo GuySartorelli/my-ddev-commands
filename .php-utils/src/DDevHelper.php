@@ -11,6 +11,12 @@ use Symfony\Component\Yaml\Yaml;
 class DDevHelper
 {
     /**
+     * @var string
+     * Characters that cannot be used for a project name
+     */
+    public const INVALID_PROJECT_NAME_CHARS = ' !@#$%^&*()"\',._<>/?:;\\';
+
+    /**
      * Run a DDEV command interactively (assumes TTY is supported)
      *
      * @return bool Whether the command was successful or not
@@ -86,6 +92,9 @@ class DDevHelper
             throw new RuntimeException("File $filePath does not exist!");
         }
         $parsed = Yaml::parseFile($filePath, Yaml::PARSE_OBJECT_FOR_MAP);
-        return $parsed?->$config;
+        if (isset($parsed->$config)) {
+            return $parsed->$config;
+        }
+        return null;
     }
 }

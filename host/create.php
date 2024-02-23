@@ -50,12 +50,6 @@ $recipeShortcuts = [
     // we need an admin recipe
 ];
 
-/**
- * @var string
- * Characters that cannot be used for a project name
- */
-$invalidProjNameChars = ' !@#$%^&*()"\',._<>/?:;\\';
-
 $composerArgs = [];
 $filesystem = new Filesystem();
 /**
@@ -78,7 +72,7 @@ $definition = new InputDefinition([
         InputArgument::OPTIONAL,
         'The name of the project. This will be used for the directory and the webhost.'
         . ' Defaults to a name generated based on the recipe and constraint.'
-        . ' Must not contain the following characters: ' . $invalidProjNameChars
+        . ' Must not contain the following characters: ' . DDevHelper::INVALID_PROJECT_NAME_CHARS
     ),
     new InputOption(
         'recipe',
@@ -237,7 +231,6 @@ function identifyPhpVersion(): void
  */
 function validateProjName(string $name): bool
 {
-    global $invalidProjNameChars;
     // Name must have a value
     if (!$name) {
         return false;
@@ -248,7 +241,7 @@ function validateProjName(string $name): bool
         return false;
     }
     // Name must not have invalid characters
-    $invalidCharsRegex = '/[' . preg_quote($invalidProjNameChars, '/') . ']/';
+    $invalidCharsRegex = '/[' . preg_quote(DDevHelper::INVALID_PROJECT_NAME_CHARS, '/') . ']/';
     return !preg_match($invalidCharsRegex, $name);
 }
 
@@ -257,8 +250,8 @@ function validateProjName(string $name): bool
  */
 function getDefaultProjName(): string
 {
-    global $input, $invalidProjNameChars;
-    $invalidCharsRegex = '/[' . preg_quote($invalidProjNameChars, '/') . ']/';
+    global $input;
+    $invalidCharsRegex = '/[' . preg_quote(DDevHelper::INVALID_PROJECT_NAME_CHARS, '/') . ']/';
     // Normalise recipe by replacing 'invalid' chars with hyphen
     $recipeParts = explode('-', preg_replace($invalidCharsRegex, '-', $input->getOption('recipe')));
     $recipe = end($recipeParts);
@@ -285,11 +278,10 @@ function normaliseProjectName(): void
     if (!validateProjName($name)) {
         $defaultName = getDefaultProjName();
         $name = Output::getIO()->ask('Name this project.', $defaultName, function (string $answer): string {
-            global $invalidProjNameChars;
             if (!validateProjName($answer)) {
                 throw new RuntimeException(
-                    'You must provide an project name. Is must not contain the following characters: '
-                    . $invalidProjNameChars
+                    'You must provide an project name. It must be unique and not contain the following characters: '
+                    . DDevHelper::INVALID_PROJECT_NAME_CHARS
                 );
             }
             return $answer;
@@ -302,7 +294,6 @@ function normaliseProjectName(): void
 function validateOptions()
 {
     global $input, $projectRoot;
-    $input->validate();
 
     // Validate project path
     $rootNotEmpty = is_dir($projectRoot) && (new RecursiveDirectoryIterator($projectRoot, RecursiveDirectoryIterator::SKIP_DOTS))->valid();
@@ -348,7 +339,7 @@ validateOptions();
 if (in_array('--no-install', $input->getOption('composer-option')) && !empty($input->getOption('pr'))) {
     Output::warning('Composer --no-install has been set. Cannot checkout PRs.');
 } elseif (!empty($input->getOption('pr'))) {
-    $prs = GitHubService::getPullRequestDetails($input->getOption('pr'), DDevHelper::getCustomConfig('github_token'));
+    $prs = GitHubService::getPullRequestDetails($input->getOption('pr'));
 }
 
 // EXECUTION
@@ -676,12 +667,17 @@ if (!$success) {
     exit(1);
 }
 
-Output::step('Building database');
-$success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
-if (!$success) {
-    Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
+// Build database
+if (in_array('--no-install', $input->getOption('composer-option'))) {
+    Output::warning('--no-install passed to composer-option, cannot build database.');
+} else {
+    Output::step('Building database');
+    $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
+    if (!$success) {
+        Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
+    }
+    Output::endProgressBar();
 }
-Output::endProgressBar();
 
 $details = DDevHelper::runJson('describe');
 Output::success("Created environment <options=bold>{$details->name}</>. Go to <options=bold>{$details->primary_url}/admin</>");

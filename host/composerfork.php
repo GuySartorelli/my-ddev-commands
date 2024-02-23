@@ -44,7 +44,7 @@ $composerService = new ComposerJsonService('./');
 $composerService->validateComposerJsonExists();
 
 Output::step('Getting fork details');
-$forkDetails = GitHubService::getPullRequestDetails($forks, DDevHelper::getCustomConfig('github_token'), true);
+$forkDetails = GitHubService::getPullRequestDetails($forks, true);
 
 Output::step('Adding fork(s)</>');
 $composerService->addForks($forkDetails);
