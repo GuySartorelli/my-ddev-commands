@@ -8,7 +8,7 @@ use Github\Exception\RuntimeException as GitHubRuntimeException;
 use InvalidArgumentException;
 use RuntimeException;
 
-class GitHubService
+final class GitHubService
 {
     /**
      * Get the full set of details of a GitHub repository from a URL or org/repo#123 formatted string.
@@ -21,23 +21,23 @@ class GitHubService
         if ($githubToken) {
             $client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
         }
-        $parsed = static::parseIdentifier($repoIdentifier);
+        $parsed = self::parseIdentifier($repoIdentifier);
         $nameForOutput = "{$parsed['org']}/{$parsed['repo']}";
         try {
-            $nameForOutput = static::getComposerNameForIdentifier($client, $parsed);
+            $nameForOutput = self::getComposerNameForIdentifier($client, $parsed);
         } catch (RuntimeException) {}
         return [
             ...$parsed,
             'outputName' => $nameForOutput,
             'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
-            'pr' => isset($parsed['pr']) ? static::getPRDetails($client, $parsed) : null,
+            'pr' => isset($parsed['pr']) ? self::getPRDetails($client, $parsed) : null,
         ];
     }
 
     /**
      * Get the full set of details of a GitHub pull request from an array of PR URLs or org/repo#123 formatted strings.
      */
-    public static function getPullRequestDetails(array $rawPRs, string $githubToken = ''): array
+    public static function getPullRequestDetails(array $rawPRs, string $githubToken = '', bool $allowNonPr = false): array
     {
         if (empty($rawPRs)) {
             return [];
@@ -48,17 +48,28 @@ class GitHubService
         }
         $prs = [];
         foreach ($rawPRs as $rawPR) {
-            $parsed = static::parseIdentifier($rawPR);
+            $parsed = self::parseIdentifier($rawPR);
+            $composerName = self::getComposerNameForIdentifier($client, $parsed);
+
             if (empty($parsed['pr'])) {
+                // If this is a fork but not a PR, we only need the parsed details and the remote details.
+                if ($allowNonPr) {
+                    $remote = "git@github.com:{$parsed['org']}/{$parsed['repo']}.git";
+                    $prs[$composerName] = array_merge($parsed, [
+                        'remote' => $remote,
+                        'remoteName' => self::getNameForRemote($remote),
+                    ]);
+                    continue;
+                }
+                // Usually we explicitly want PRs only.
                 throw new InvalidArgumentException("'$rawPR' is not a valid GitHub PR reference.");
             }
 
-            $composerName = static::getComposerNameForIdentifier($client, $parsed);
             if (array_key_exists($composerName, $prs)) {
                 throw new InvalidArgumentException("cannot add multiple PRs for the same package: $composerName");
             }
 
-            $prs[$composerName] = static::getPRDetails($client, $parsed);
+            $prs[$composerName] = self::getPRDetails($client, $parsed);
         }
         return $prs;
     }
@@ -95,21 +106,14 @@ class GitHubService
         return $composerName;
     }
 
+    /**
+     * Get details about the PR from the github API
+     */
     private static function getPRDetails(GithubClient $client, array $parsedIdentifier): array
     {
         $prDetails = $client->pullRequest()->show($parsedIdentifier['org'], $parsedIdentifier['repo'], $parsedIdentifier['pr']);
         $remote = $prDetails['head']['repo']['ssh_url'];
-
-        // Check PR type to determine remote name
-        $prIsCC = str_starts_with($remote, 'git@github.com:creative-commoners/');
-        $prIsSecurity = str_starts_with($remote, 'git@github.com:silverstripe-security/');
-        if ($prIsCC) {
-            $remoteName = 'cc';
-        } elseif ($prIsSecurity) {
-            $remoteName = 'security';
-        } else {
-            $remoteName = 'pr';
-        }
+        $remoteName = self::getNameForRemote($remote);
 
         return array_merge($parsedIdentifier, [
             'from-org' => $prDetails['head']['user']['login'],
@@ -118,5 +122,22 @@ class GitHubService
             'baseBranch' => $prDetails['base']['ref'],
             'remoteName' => $remoteName,
         ]);
+    }
+
+    /**
+     * Get a name for the remote if we end up using it in git
+     */
+    private static function getNameForRemote(string $remote): string
+    {
+        // Check PR type to determine remote name
+        $prIsCC = str_starts_with($remote, 'git@github.com:creative-commoners/');
+        $prIsSecurity = str_starts_with($remote, 'git@github.com:silverstripe-security/');
+        if ($prIsCC) {
+            return 'cc';
+        }
+        if ($prIsSecurity) {
+            return 'security';
+        }
+        return 'pr';
     }
 }

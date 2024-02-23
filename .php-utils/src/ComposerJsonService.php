@@ -60,6 +60,11 @@ class ComposerJsonService
         $json = $this->getComposerJson();
 
         foreach ($forkDetails as $composerName => $fork) {
+            // Skip if we don't know what branch we should be targetting
+            if (!isset($fork['prBranch'])) {
+                continue;
+            }
+
             $alias = $this->getCurrentComposerConstraint($composerName);
             if (!$alias) {
                 $alias = $parser->normalizeBranch($fork['baseBranch']);
