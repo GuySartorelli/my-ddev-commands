@@ -282,7 +282,12 @@ if (file_exists('.env')) {
 
     // Add in DDEV config
     $envContent .= "\n\n\n#### DDEV settings\n\n" . $copyEnvContent;
-    file_put_contents('.env', $envContent);
+    $success = file_put_contents('.env', $envContent);
+    if (!$success) {
+        Output::error('Failed to write .env content');
+        // @TODO rollback?
+        exit(1);
+    }
 }
 
 $success = ProjectCreatorHelper::copyProjectFiles($commandsDir, './', false);
