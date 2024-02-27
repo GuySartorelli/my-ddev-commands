@@ -679,7 +679,7 @@ if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::endProgressBar();
 }
 
-$details = DDevHelper::runJson('describe');
+$details = DDevHelper::getProjectDetails();
 Output::success("Created environment <options=bold>{$details->name}</>. Go to <options=bold>{$details->primary_url}/admin</>");
 
 if (!$success) {
