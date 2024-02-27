@@ -15,6 +15,7 @@ use GuySartorelli\DdevPhpUtils\ComposerJsonService;
 use GuySartorelli\DdevPhpUtils\DDevHelper;
 use GuySartorelli\DdevPhpUtils\GitHubService;
 use GuySartorelli\DdevPhpUtils\Output;
+use GuySartorelli\DdevPhpUtils\ProjectCreatorHelper;
 use GuySartorelli\DdevPhpUtils\Validation;
 use Packagist\Api\Client as PackagistClient;
 use Packagist\Api\PackageNotFoundException;
@@ -50,7 +51,6 @@ $recipeShortcuts = [
     // we need an admin recipe
 ];
 
-$composerArgs = [];
 $filesystem = new Filesystem();
 /**
  * @var string
@@ -227,25 +227,6 @@ function identifyPhpVersion(): void
 }
 
 /**
- * Validates a project name against a set of banned characters, and ensures it's unique.
- */
-function validateProjName(string $name): bool
-{
-    // Name must have a value
-    if (!$name) {
-        return false;
-    }
-    // Name must not represent a pre-existing project
-    if (DDevHelper::getProjectDetails($name) !== null) {
-        Output::warning('A project with that name already exists');
-        return false;
-    }
-    // Name must not have invalid characters
-    $invalidCharsRegex = '/[' . preg_quote(DDevHelper::INVALID_PROJECT_NAME_CHARS, '/') . ']/';
-    return !preg_match($invalidCharsRegex, $name);
-}
-
-/**
  * Gets the default name for this project based on the options provided.
  */
 function getDefaultProjName(): string
@@ -267,74 +248,11 @@ function getDefaultProjName(): string
     return $name;
 }
 
-/**
- * Normalises the project name, asking for one if the current one is invalid.
- */
-function normaliseProjectName(): void
-{
-    global $input;
-    $name = $input->getArgument('project-name') ?? '';
-
-    if (!validateProjName($name)) {
-        $defaultName = getDefaultProjName();
-        $name = Output::getIO()->ask('Name this project.', $defaultName, function (string $answer): string {
-            if (!validateProjName($answer)) {
-                throw new RuntimeException(
-                    'You must provide an project name. It must be unique and not contain the following characters: '
-                    . DDevHelper::INVALID_PROJECT_NAME_CHARS
-                );
-            }
-            return $answer;
-        });
-    }
-
-    $input->setArgument('project-name', $name);
-}
-
-function validateOptions()
-{
-    global $input, $projectRoot;
-
-    // Validate project path
-    $rootNotEmpty = is_dir($projectRoot) && (new RecursiveDirectoryIterator($projectRoot, RecursiveDirectoryIterator::SKIP_DOTS))->valid();
-    if ($rootNotEmpty) {
-        throw new RuntimeException('Project root path must be empty.');
-    }
-    if (is_file($projectRoot)) {
-        throw new RuntimeException('Project root path must not be a file.');
-    }
-
-    // Validate DB
-    $validDbDrivers = [
-        'mysql',
-        'mariadb',
-        // @TODO add postgres and sqlite3 support again?
-    ];
-    if (!in_array($input->getOption('db'), $validDbDrivers)) {
-        throw new InvalidOptionException('--db must be one of ' . implode(', ', $validDbDrivers));
-    }
-
-    // Validate recipe
-    // see https://getcomposer.org/doc/04-schema.md#name for regex
-    if (!preg_match('%^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9](([_.]?|-{0,2})[a-z0-9]+)*$%', $input->getOption('recipe'))) {
-        throw new InvalidOptionException('recipe must be a valid composer package name.');
-    }
-
-    // @TODO validate if extra module(s) even exist
-
-    // @TODO validate if composer options are valid??
-}
-
 normaliseRecipe();
 identifyPhpVersion();
-normaliseProjectName();
-
-$projectRoot = Path::join(
-    DDevHelper::getCustomConfig('projects_path'),
-    $input->getArgument('project-name')
-);
-
-validateOptions();
+$projectName = ProjectCreatorHelper::getProjectName($input->getArgument('project-name') ?? '', getDefaultProjName(), true);
+$projectRoot = Path::join(DDevHelper::getCustomConfig('projects_path'), $projectName);
+ProjectCreatorHelper::validateOptions($input, $projectRoot, true);
 
 if (in_array('--no-install', $input->getOption('composer-option')) && !empty($input->getOption('pr'))) {
     Output::warning('Composer --no-install has been set. Cannot checkout PRs.');
@@ -366,112 +284,17 @@ function createProjectRoot(): bool
 }
 
 /**
- * Spins up an opinionated DDEV project, adds extra extensions, etc
- */
-function setupDdevProject(): bool
-{
-    global $input;
-    Output::step('Spinning up DDEV project');
-
-    $dbType = $input->getOption('db');
-    $dbVersion = $input->getOption('db-version');
-    if ($dbVersion) {
-        $db = "--database={$dbType}:{$dbVersion}";
-    } else {
-        $db = "--db-image={$dbType}";
-    }
-
-    $success = DDevHelper::runInteractiveOnVerbose(
-        'config',
-        [
-            $db,
-            '--webserver-type=apache-fpm',
-            '--webimage-extra-packages=php${DDEV_PHP_VERSION}-tidy',
-            '--project-type=php',
-            '--php-version=' . $input->getOption('php-version'),
-            '--project-name=' . $input->getArgument('project-name'),
-            '--timezone=Pacific/Auckland',
-            '--docroot=public',
-            '--create-docroot',
-        ]
-    );
-    if (!$success) {
-        Output::error('Failed to set up DDEV project.');
-        return false;
-    }
-
-    $hasBehat = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-selenium-standalone-chrome']);
-    if (!$hasBehat) {
-        Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-selenium-standalone-chrome</> - add that manually.');
-    }
-
-    $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-adminer']);
-    if (!$hasDbAdmin) {
-        Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
-    }
-
-    DDevHelper::runInteractiveOnVerbose('start', []);
-
-    Output::endProgressBar();
-    return true;
-}
-
-/**
- * Prepares the arguments for a given composer command, taking
- * the passed composer options into account.
- */
-function prepareComposerArgs(string $commandType): array
-{
-    global $input, $composerArgs;
-    if (!$composerArgs) {
-        // Prepare composer command
-        $composerArgs = [
-            '--no-interaction',
-            ...$input->getOption('composer-option')
-        ];
-    }
-    $args = $composerArgs;
-
-    // `composer install` can't take --no-audit, but we don't want to include audits in other commands.
-    // We also don't want to install until the install step.
-    if ($commandType !== 'install') {
-        $args[] = '--no-install';
-        $args[] = '--no-audit';
-    }
-
-    // Make sure --no-install isn't in there twice.
-    return array_unique($args);
-}
-
-/**
- * Gets a composer command ready to be called.
- */
-function prepareComposerCommand(string $commandType)
-{
-    global $input;
-    $args = prepareComposerArgs($commandType);
-    $command = [
-        $commandType,
-        ...$args
-    ];
-    if ($commandType === 'create') {
-        $command[] = '--no-scripts';
-        $command[] = $input->getOption('recipe') . ':' . $input->getOption('constraint');
-    }
-    return $command;
-}
-
-/**
  * Runs composer require for the given module if it should be included.
  */
 function includeOptionalModule(string $moduleName, bool $shouldInclude = true, bool $isDev = false)
 {
+    global $input;
     if ($shouldInclude) {
         Output::subStep("Adding optional module $moduleName");
         $args = [
             'require',
             $moduleName,
-            ...prepareComposerArgs('require'),
+            ...ProjectCreatorHelper::prepareComposerArgs($input, 'require'),
         ];
 
         if ($isDev) {
@@ -496,7 +319,7 @@ function setupComposerProject(): bool
     Output::step('Creating composer project');
 
     // Run composer command
-    $args = prepareComposerCommand('create');
+    $args = ProjectCreatorHelper::prepareComposerCommand($input, 'create');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
     if (!$success) {
         Output::error('Couldn\'t create composer project.');
@@ -590,29 +413,6 @@ function checkoutPRs(): bool
     return $success;
 }
 
-/**
- * Copy files to the project. Has to be done AFTER composer create
- */
-function copyProjectFiles(): bool
-{
-    global $filesystem, $projectRoot, $commandsDir;
-    Output::step('Copying opinionated files to project');
-    try {
-        // Copy files through (config, .env, etc)
-        $filesystem->mirror(
-            Path::join($commandsDir, '.php-utils', 'copy-to-project'),
-            $projectRoot,
-            options: ['override' => true]
-        );
-    } catch (IOExceptionInterface $e) {
-        // @TODO replace this with more standardised error/failure handling.
-        Output::error("Couldn't copy project files: {$e->getMessage()}");
-        Output::debug($e->getTraceAsString());
-        return false;
-    }
-    return true;
-}
-
 // Set up project root directory
 $success = createProjectRoot();
 if (!$success) {
@@ -623,7 +423,7 @@ if (!$success) {
 chdir($projectRoot);
 
 // DDEV config
-$success = setupDdevProject();
+$success = ProjectCreatorHelper::setupDdevProject($input, $projectName);
 if (!$success) {
     // @TODO rollback
     exit(1);
@@ -646,7 +446,7 @@ if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::warning('Opted not to run `composer install` - dont forget to run that!');
 } else {
     Output::step('Running composer install now that dependencies have been added');
-    $args = prepareComposerCommand('install');
+    $args = ProjectCreatorHelper::prepareComposerCommand($input, 'install');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
     if (!$success) {
         Output::error('Couldn\'t run composer install.');
@@ -661,7 +461,7 @@ if (!empty($prs) && !$input->getOption('pr-has-deps')) {
     checkoutPRs();
 }
 
-$success = copyProjectFiles();
+$success = ProjectCreatorHelper::copyProjectFiles($commandsDir, $projectRoot, true);
 if (!$success) {
     // @TODO rollback?
     exit(1);

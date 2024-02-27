@@ -97,4 +97,10 @@ class DDevHelper
         }
         return null;
     }
+
+    public static function isInProject(): bool
+    {
+        $details = self::getProjectDetails();
+        return (bool) $details;
+    }
 }
