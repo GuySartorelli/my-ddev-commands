@@ -8,7 +8,7 @@ use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
-class DDevHelper
+final class DDevHelper
 {
     /**
      * @var string
@@ -39,7 +39,7 @@ class DDevHelper
     public static function runInteractiveOnVerbose(string $command, array $args = []): bool
     {
         if (Output::isVerbose()) {
-            return static::runInteractive($command, $args);
+            return self::runInteractive($command, $args);
         }
 
         $process = new Process(['ddev', $command, ...$args]);
@@ -67,8 +67,8 @@ class DDevHelper
      */
     public static function runJson(string $command, array $args = []): mixed
     {
-        $response = json_decode(static::run($command, [...$args, '--json-output']), false);
-        return $response?->raw ?? null;
+        $response = json_decode(self::run($command, [...$args, '--json-output']), false);
+        return $response->raw ?? null;
     }
 
     /**
@@ -79,7 +79,7 @@ class DDevHelper
      */
     public static function getProjectDetails(string $project = ''): ?stdClass
     {
-        return static::runJson('describe', $project ? [$project] : []);
+        return self::runJson('describe', $project ? [$project] : []);
     }
 
     /**
