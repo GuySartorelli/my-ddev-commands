@@ -1,5 +1,5 @@
 ---
-Name: eddev-graphql-devtools
+Name: ddev-extra-graphql-devtools
 Only:
   moduleexists: silverstripe/graphql-devtools
 ---

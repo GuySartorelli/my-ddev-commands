@@ -1,5 +1,5 @@
 ---
-Name: eddev-error-logging
+Name: ddev-extra-error-logging
 ---
 SilverStripe\Core\Injector\Injector:
   Psr\Log\LoggerInterface.errorhandler:

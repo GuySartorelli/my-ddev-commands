@@ -1,5 +1,5 @@
 ---
-Name: eddev-debugbar
+Name: ddev-extra-debugbar
 After: debugbar
 Only:
   moduleexists: lekoala/silverstripe-debugbar

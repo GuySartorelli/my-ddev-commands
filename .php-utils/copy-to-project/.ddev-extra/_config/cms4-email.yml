@@ -1,5 +1,5 @@
 ---
-Name: eddev-emailconfig-cms4
+Name: ddev-extra-emailconfig-cms4
 Only:
   classexists: SilverStripe\Control\Email\SwiftMailer
 After:
