@@ -281,7 +281,7 @@ if (file_exists('.env')) {
     }
 
     // Add in DDEV config
-    $envContent .= "\n\n\n#### DDEV settings\n\n" . implode("\n", $matches[0]);
+    $envContent .= "\n\n\n#### DDEV settings\n\n" . $copyEnvContent;
     file_put_contents('.env', $envContent);
 }
 
