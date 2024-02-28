@@ -8,6 +8,7 @@
 ## ExecRaw: true
 
 MODULE_NAME=$1
+ERRORS=0
 
 if [ -z $MODULE_NAME ]; then
     echo "A module name (or './' for the project itself) must be passed in."
@@ -59,7 +60,10 @@ if [ -f "vendor/bin/phpcs" ]; then
 
     if [ -n "$PHPCS_STANDARD" ]; then
         echo "Running phpcs"
-        vendor/bin/phpcs -p --standard=$PHPCS_STANDARD "$LINT_PATHS"
+        vendor/bin/phpcs -p --colors --standard=$PHPCS_STANDARD "$LINT_PATHS"
+        if [ $? -ne 0 ]; then
+            ERRORS+=1
+        fi
     else
         echo "No phpcs standard - skipping"
     fi
@@ -77,7 +81,10 @@ if [ -f "vendor/bin/phpstan" ]; then
         echo "Running phpstan"
         # We don't pass lint paths in here because our phpstan config declares the paths
         # and tests are explicitly not linted right now
-        vendor/bin/phpstan analyse --configuration=$PHPSTAN_CONFIG
+        vendor/bin/phpstan analyse --ansi --configuration=$PHPSTAN_CONFIG
+        if [ $? -ne 0 ]; then
+            ERRORS+=1
+        fi
     else
         echo "No phpstan config - skipping"
     fi
@@ -86,5 +93,10 @@ fi
 # parallel-lint
 if [ -f "vendor/bin/parallel-lint" ]; then
     echo "Running parallel-lint"
-    vendor/bin/parallel-lint "$LINT_PATHS"
+    vendor/bin/parallel-lint --colors "$LINT_PATHS"
+        if [ $? -ne 0 ]; then
+            ERRORS+=1
+        fi
 fi
+
+exit $ERRORS
