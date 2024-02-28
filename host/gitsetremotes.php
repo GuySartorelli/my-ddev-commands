@@ -3,14 +3,15 @@
 
 // Based on https://gist.github.com/maxime-rainville/0e2cc280cc9d2e014a21b55a192076d9
 
-## Description: Set the various development remotes in the git project for the current working dir.
+## Description: Set the various development remotes in the git project for the current working dir. Also adds a pre-push hook to modules in DDEV projects.
 ## Usage: remotes
 ## Example: "ddev remotes [options]"
-## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"rename-origin","Shorthand":"r","DefValue":"true","Usage":"Rename the 'origin' remote to 'orig'"},{"Name":"security","Shorthand":"s","Usage":"Add the security remote instead of the creative commoners remote"},{"Name":"fetch","Shorthand":"f","Usage":"Run git fetch after defining remotes"}]
+## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"rename-origin","Shorthand":"r","DefValue":"true","Usage":"Rename the 'origin' remote to 'orig'"},{"Name":"security","Shorthand":"s","Usage":"Add the security remote instead of the creative commoners remote"},{"Name":"fetch","Shorthand":"f","Usage":"Run git fetch after defining remotes"},{"Name":"no-hooks","Usage":"Skip adding pre-push hook"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 
 use Gitonomy\Git\Repository;
+use GuySartorelli\DdevPhpUtils\DDevHelper;
 use GuySartorelli\DdevPhpUtils\Output;
 use GuySartorelli\DdevPhpUtils\Validation;
 use Symfony\Component\Console\Input\InputDefinition;
@@ -47,6 +48,12 @@ $definition = new InputDefinition([
         'f',
         InputOption::VALUE_NONE,
         'Run git fetch after defining remotes'
+    ),
+    new InputOption(
+        'no-hooks',
+        null,
+        InputOption::VALUE_NONE,
+        'Skip adding pre-push hook'
     ),
 ]);
 $input = Validation::validate($definition);
@@ -101,6 +108,44 @@ if ($input->getOption('rename-origin')) {
 if ($input->getOption('fetch')) {
     Output::step('Fetching all remotes');
     $gitRepo->run('fetch', ['--all']);
+}
+
+// Pre-push hook
+$cwd = getcwd() ?: '';
+$isModule = preg_match('#.*?/vendor/([a-z_.-]+/[a-z_.-]+)#', $cwd, $matches);
+if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
+    $moduleName = $matches[1];
+    $moduleDir = $matches[0];
+    $hookPath = Path::join($moduleDir, '.git/hooks/pre-push');
+    if (file_exists($hookPath)) {
+        Output::step('Pre-push hook already exists');
+    } else {
+        Output::step('Creating pre-push hook');
+        $hook = <<<HOOK
+        #!/bin/bash
+
+        # Ensures PHP code is linted before pushing changes.
+        # Called by "git push" after it has checked the remote status, but before anything has been pushed.
+        # If this script exits with a non-zero status nothing will be pushed.
+        #
+        # This hook is called with the following parameters:
+        #
+        # $1 -- Name of the remote to which the push is being done
+        # $2 -- URL to which the push is being done
+
+        ddev lint $moduleName
+
+        if [ $? -ne 0 ]; then
+            echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
+            exit 1
+        fi
+
+        echo "PASSED LINTING"
+        exit 0
+        HOOK;
+        file_put_contents($hookPath, $hook);
+        chmod($hookPath, 0755);
+    }
 }
 
 $successMsg = 'Remotes added';
