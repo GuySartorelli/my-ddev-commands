@@ -18,3 +18,4 @@ fi
 
 # Run behat
 behat "$@"
+exit $?

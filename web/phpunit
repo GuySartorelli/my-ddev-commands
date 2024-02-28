@@ -75,3 +75,4 @@ rm -r "silverstripe-cache" && mkdir "silverstripe-cache" || true
 
 echo 'Running PHPUnit.'
 phpunit "$ARGS" "$@"
+exit $?
