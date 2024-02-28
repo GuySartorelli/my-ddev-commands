@@ -338,6 +338,8 @@ function setupComposerProject(): bool
     includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
     includeOptionalModule('silverstripe/recipe-testing', (bool) $input->getOption('include-recipe-testing'), isDev: true);
+    includeOptionalModule('php-parallel-lint/php-parallel-lint', isDev: true);
+    includeOptionalModule('php-parallel-lint/php-console-highlighter', isDev: true);
     // Always include dev docs if we're not using sink, which has it as a dependency
     includeOptionalModule('silverstripe/developer-docs', ($input->getOption('recipe') !== 'silverstripe/recipe-kitchen-sink'));
 

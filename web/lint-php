@@ -1,0 +1,90 @@
+#!/bin/bash
+
+## Description: Lint PHP code in a given module. Pass "./" as the module name to lint the project itself.
+## Usage: lint <module-name>
+## Flags: []
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: true
+
+MODULE_NAME=$1
+
+if [ -z $MODULE_NAME ]; then
+    echo "A module name (or './' for the project itself) must be passed in."
+    exit 1
+fi
+
+# Find module directory
+if [[ $MODULE_NAME == "./" ]]; then
+    MODULE_DIR="app"
+else
+    if [[ $MODULE_NAME == *"/"* ]]; then
+        LOOK_FOR=$MODULE_NAME
+    else
+        LOOK_FOR="**/$MODULE_NAME"
+    fi
+    MODULE_DIR=$(find "vendor" -maxdepth 2 -type d -path "vendor/$LOOK_FOR")
+fi
+if [ -z "$MODULE_DIR" ]; then
+    echo "Module '$MODULE_NAME' was not found."
+    exit 1
+fi
+
+# Find lint paths
+LINT_PATHS=()
+if [ -d "$MODULE_DIR/src" ]; then
+    LINT_PATHS+=("$MODULE_DIR/src")
+fi
+if [ -d "$MODULE_DIR/code" ]; then
+    LINT_PATHS+=("$MODULE_DIR/code")
+fi
+if [ -d "$MODULE_DIR/tests" ]; then
+    LINT_PATHS+=("$MODULE_DIR/tests")
+fi
+if [ -f "$MODULE_DIR/_config.php" ]; then
+    LINT_PATHS+=("$MODULE_DIR/_config.php")
+fi
+if [ ${#LINT_PATHS[@]} -eq 0 ]; then
+    echo "Couldn't find lint paths for '$MODULE_NAME'"
+    exit 1
+fi
+
+# phpcs
+if [ -f "vendor/bin/phpcs" ]; then
+    if [ -f "$MODULE_DIR/phpcs.xml" ]; then
+        PHPCS_STANDARD="$MODULE_DIR/phpcs.xml"
+    elif [ -f "$MODULE_DIR/phpcs.xml.dist" ]; then
+        PHPCS_STANDARD="$MODULE_DIR/phpcs.xml.dist"
+    fi
+
+    if [ -n "$PHPCS_STANDARD" ]; then
+        echo "Running phpcs"
+        vendor/bin/phpcs -p --standard=$PHPCS_STANDARD "$LINT_PATHS"
+    else
+        echo "No phpcs standard - skipping"
+    fi
+fi
+
+# phpstan
+if [ -f "vendor/bin/phpstan" ]; then
+    if [ -f "$MODULE_DIR/phpstan.neon" ]; then
+        PHPSTAN_CONFIG="$MODULE_DIR/phpstan.neon"
+    elif [ -f "$MODULE_DIR/phpstan.neon.dist" ]; then
+        PHPSTAN_CONFIG="$MODULE_DIR/phpstan.neon.dist"
+    fi
+
+    if [ -n "$PHPSTAN_CONFIG" ]; then
+        echo "Running phpstan"
+        # We don't pass lint paths in here because our phpstan config declares the paths
+        # and tests are explicitly not linted right now
+        vendor/bin/phpstan analyse --configuration=$PHPSTAN_CONFIG
+    else
+        echo "No phpstan config - skipping"
+    fi
+fi
+
+# parallel-lint
+if [ -f "vendor/bin/parallel-lint" ]; then
+    echo "Running parallel-lint"
+    vendor/bin/parallel-lint "$LINT_PATHS"
+fi
