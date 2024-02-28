@@ -7,7 +7,6 @@
 ## ProjectTypes: silverstripe, php
 ## ExecRaw: true
 
-VENDOR_DIR="{$DDEV_APPROOT}/vendor"
 ARGS=()
 
 # Parse flags
