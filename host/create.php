@@ -331,6 +331,8 @@ function setupComposerProject(): bool
     DDevHelper::run('composer', ['config', 'allow-plugins.composer/installers', 'true']);
     DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/recipe-plugin', 'true']);
     DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/vendor-plugin', 'true']);
+    // required for linting docs
+    DDevHelper::run('composer', ['config', 'allow-plugins.dealerdirect/phpcodesniffer-composer-installer', 'true']);
 
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');
@@ -338,8 +340,12 @@ function setupComposerProject(): bool
     includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
     includeOptionalModule('silverstripe/recipe-testing', (bool) $input->getOption('include-recipe-testing'), isDev: true);
+    // for linting
     includeOptionalModule('php-parallel-lint/php-parallel-lint', isDev: true);
     includeOptionalModule('php-parallel-lint/php-console-highlighter', isDev: true);
+    // for linting docs
+    includeOptionalModule('silverstripe/markdown-php-codesniffer', isDev: true);
+    includeOptionalModule('slevomat/coding-standard', isDev: true);
     // Always include dev docs if we're not using sink, which has it as a dependency
     includeOptionalModule('silverstripe/developer-docs', ($input->getOption('recipe') !== 'silverstripe/recipe-kitchen-sink'));
 

@@ -10,7 +10,7 @@
 MODULE_NAME=$1
 ERRORS=0
 
-if [ -z $MODULE_NAME ]; then
+if [ -z "$MODULE_NAME" ]; then
     echo "A module name (or './' for the project itself) must be passed in."
     exit 1
 fi

@@ -1,0 +1,82 @@
+#!/bin/bash
+
+## Description: Lint documentation in a given module. Skips linting javascript in docs due to ambiguity. Pass "./" as the module name to lint the project itself.
+## Usage: lint-docs <module-name>
+## Flags: []
+# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
+## ProjectTypes: silverstripe, php
+## ExecRaw: true
+
+MODULE_NAME=$1
+ERRORS=0
+
+if [ -z "$MODULE_NAME" ]; then
+    echo "A module name (or './' for the project itself) must be passed in."
+    exit 1
+fi
+
+# Find module directory
+if [[ $MODULE_NAME == "./" ]]; then
+    MODULE_DIR="."
+else
+    if [[ $MODULE_NAME == *"/"* ]]; then
+        LOOK_FOR=$MODULE_NAME
+    else
+        LOOK_FOR="**/$MODULE_NAME"
+    fi
+    MODULE_DIR=$(find "vendor" -maxdepth 2 -type d -path "vendor/$LOOK_FOR")
+fi
+if [ -z "$MODULE_DIR" ]; then
+    echo "Module '$MODULE_NAME' was not found."
+    exit 1
+fi
+
+if ! [ -f "$MODULE_DIR/package.json" ]; then
+    echo "No package.json file for $MODULE_NAME - cannot lint"
+    echo "Did you mean 'ddev lint'?"
+    exit 0
+fi
+
+SCRIPTS=$(jq -r '.scripts | keys[]' "$MODULE_DIR/package.json" 2>/dev/null)
+
+HAS_IT=$(echo "$SCRIPTS" | grep "^lint-php$")
+if [ -f "$MODULE_DIR/phpcs.xml" ]; then
+    PHPCS_STANDARD="$MODULE_DIR/phpcs.xml"
+elif [ -f "$MODULE_DIR/phpcs.xml.dist" ]; then
+    PHPCS_STANDARD="$MODULE_DIR/phpcs.xml.dist"
+fi
+if [ -n "$HAS_IT" ] && [ -f "vendor/bin/mdphpcs" ] && [ -n "$PHPCS_STANDARD" ]; then
+    # we could get the path from the script but I'm too lazy to figure that out sooo....
+    if [ -d "$MODULE_DIR/docs" ]; then
+        DOC_DIR="$MODULE_DIR/docs"
+    elif [ -d "$MODULE_DIR/en" ]; then
+        DOC_DIR="$MODULE_DIR/en"
+    fi
+    if [ -n "$DOC_DIR" ]; then
+        echo "Linting PHP in docs"
+        vendor/bin/mdphpcs -p --colors --standard=$PHPCS_STANDARD $DOC_DIR
+        if [ $? -ne 0 ]; then
+            ERRORS+=1
+        fi
+    else
+        echo "Couldn't find docs dir for PHP linting"
+    fi
+else
+    echo "Skipping php in docs"
+fi
+
+cd $MODULE_DIR
+
+# lint doc markdown
+HAS_IT=$(echo "$SCRIPTS" | grep "^lint-md$")
+if [ -n "$HAS_IT" ]; then
+    echo "Linting markdown in docs"
+    yarn install && yarn lint-md
+    if [ $? -ne 0 ]; then
+        ERRORS+=1
+    fi
+else
+    echo "Skipping markdown in docs"
+fi
+
+exit $ERRORS

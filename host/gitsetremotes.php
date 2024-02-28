@@ -121,28 +121,53 @@ if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
         Output::step('Pre-push hook already exists');
     } else {
         Output::step('Creating pre-push hook');
-        $hook = <<<HOOK
-        #!/bin/bash
+        if ($moduleName === 'silverstripe/developer-docs') {
+            $hook = <<<HOOK
+            #!/bin/bash
 
-        # Ensures PHP code is linted before pushing changes.
-        # Called by "git push" after it has checked the remote status, but before anything has been pushed.
-        # If this script exits with a non-zero status nothing will be pushed.
-        #
-        # This hook is called with the following parameters:
-        #
-        # $1 -- Name of the remote to which the push is being done
-        # $2 -- URL to which the push is being done
+            # Ensures PHP code is linted before pushing changes.
+            # Called by "git push" after it has checked the remote status, but before anything has been pushed.
+            # If this script exits with a non-zero status nothing will be pushed.
+            #
+            # This hook is called with the following parameters:
+            #
+            # $1 -- Name of the remote to which the push is being done
+            # $2 -- URL to which the push is being done
 
-        ddev lint $moduleName
+            ddev lint-docs $moduleName
 
-        if [ $? -ne 0 ]; then
-            echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
-            exit 1
-        fi
+            if [ $? -ne 0 ]; then
+                echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
+                exit 1
+            fi
 
-        echo "PASSED LINTING"
-        exit 0
-        HOOK;
+            echo "PASSED LINTING"
+            exit 0
+            HOOK;
+        } else {
+            $hook = <<<HOOK
+            #!/bin/bash
+
+            # Ensures PHP code is linted before pushing changes.
+            # Called by "git push" after it has checked the remote status, but before anything has been pushed.
+            # If this script exits with a non-zero status nothing will be pushed.
+            #
+            # This hook is called with the following parameters:
+            #
+            # $1 -- Name of the remote to which the push is being done
+            # $2 -- URL to which the push is being done
+
+            ddev lint $moduleName
+
+            if [ $? -ne 0 ]; then
+                echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
+                exit 1
+            fi
+
+            echo "PASSED LINTING"
+            exit 0
+            HOOK;
+        }
         file_put_contents($hookPath, $hook);
         chmod($hookPath, 0755);
     }
