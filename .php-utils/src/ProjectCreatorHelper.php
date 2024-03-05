@@ -82,7 +82,9 @@ final class ProjectCreatorHelper
     public static function getProjectName(string $currentName, ?string $suggestedName, bool $isCreate = false): string
     {
         if (!ProjectCreatorHelper::validateProjName($currentName, !$isCreate)) {
-            Output::warning('The current directory name is not a valid DDEV project name.');
+            if (!$isCreate) {
+                Output::warning('The current directory name is not a valid DDEV project name.');
+            }
             $currentName = Output::getIO()->ask('Name this project.', $suggestedName, function (string $answer): string {
                 if (!ProjectCreatorHelper::validateProjName($answer)) {
                     throw new RuntimeException(
