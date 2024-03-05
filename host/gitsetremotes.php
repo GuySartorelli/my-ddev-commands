@@ -134,6 +134,9 @@ if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
             # $1 -- Name of the remote to which the push is being done
             # $2 -- URL to which the push is being done
 
+            # clear stdin so phpcs doesn't try to use it. Sigh.
+            read -t 0.1 -n 10000 discard
+            # do the linting
             ddev lint-docs $moduleName
 
             if [ $? -ne 0 ]; then
@@ -157,6 +160,9 @@ if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
             # $1 -- Name of the remote to which the push is being done
             # $2 -- URL to which the push is being done
 
+            # clear stdin so phpcs doesn't try to use it. Sigh.
+            read -t 0.1 -n 10000 discard
+            # do the linting
             ddev lint $moduleName
 
             if [ $? -ne 0 ]; then
