@@ -74,5 +74,6 @@ echo 'Removing old cache.'
 rm -r "silverstripe-cache" && mkdir "silverstripe-cache" || true
 
 echo 'Running PHPUnit.'
-phpunit "$ARGS" "$@"
+echo phpunit "${ARGS[@]}" "$@"
+phpunit "${ARGS[@]}" "$@"
 exit $?
