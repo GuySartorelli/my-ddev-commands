@@ -32,38 +32,49 @@ include_once $autoload;
 $definition = new InputDefinition([
     new InputArgument(
         'identifier',
-        InputArgument::REQUIRED,
+        InputArgument::REQUIRED | InputArgument::IS_ARRAY,
         'URL pr org/repo#123 reference to a GitHub repo - optionally for a specific pull request'
     ),
 ]);
 $input = Validation::validate($definition);
 
-$identifier = $input->getArgument('identifier');
-$repoDetails = GitHubService::getRepositoryDetails($identifier);
+$identifiers = $input->getArgument('identifier');
+$success = true;
+foreach ($identifiers as $identifier) {
+    $repoDetails = GitHubService::getRepositoryDetails($identifier);
 
-$cloneDir = Path::canonicalize(DDevHelper::getCustomConfig('clone_dir'));
-if (!is_dir($cloneDir)) {
-    Output::error("<options=bold>$cloneDir</> does not exist or is not a directory. Check your <options=bold>clone_dir</> config variable.");
-    exit(1);
-}
-Output::step("Cloning {$repoDetails['outputName']} into {$cloneDir}");
-
-$repoPath = Path::join($cloneDir, preg_replace('/^silverstripe-/', '', $repoDetails['repo']));
-Git::cloneRepository($repoPath, $repoDetails['cloneUri']);
-
-if (isset($repoDetails['pr'])) {
-    $details = $repoDetails['pr'];
-    Output::step('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
-
-    try {
-        $gitRepo = new Repository($repoPath);
-        $gitRepo->run('remote', ['add', $details['remoteName'], $details['remote']]);
-        $gitRepo->run('fetch', [$details['remoteName']]);
-        $gitRepo->run('checkout', ["{$details['remoteName']}/" . $details['prBranch'], '--track', '--no-guess']);
-    } catch (ProcessException $e) {
-        Output::error("Could not check out PR branch <options=bold>{$details['prBranch']}</> - please check it out manually.");
+    $cloneDir = Path::canonicalize(DDevHelper::getCustomConfig('clone_dir'));
+    if (!is_dir($cloneDir)) {
+        Output::error("<options=bold>$cloneDir</> does not exist or is not a directory. Check your <options=bold>clone_dir</> config variable.");
         exit(1);
+    }
+    Output::step("Cloning {$repoDetails['outputName']} into {$cloneDir}");
+
+    $repoPath = Path::join($cloneDir, preg_replace('/^silverstripe-/', '', $repoDetails['repo']));
+    Git::cloneRepository($repoPath, $repoDetails['cloneUri']);
+
+    if (isset($repoDetails['pr'])) {
+        $details = $repoDetails['pr'];
+        Output::subStep('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
+
+        try {
+            $gitRepo = new Repository($repoPath);
+            $gitRepo->run('remote', ['add', $details['remoteName'], $details['remote']]);
+            $gitRepo->run('fetch', [$details['remoteName']]);
+            $gitRepo->run('checkout', ["{$details['remoteName']}/" . $details['prBranch'], '--track', '--no-guess']);
+        } catch (ProcessException $e) {
+            Output::error("Could not check out PR branch <options=bold>{$details['prBranch']}</> - please check it out manually.");
+            $success = false;
+        }
+    }
+
+    if ($success) {
+        Output::step("{$repoDetails['outputName']} cloned successfully.");
     }
 }
 
-Output::success("{$repoDetails['outputName']} cloned successfully.");
+if ($success) {
+    Output::success('Repo(s) cloned successfully.');
+} else {
+    exit(1);
+}
