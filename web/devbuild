@@ -3,8 +3,7 @@
 ## Description: Shortcut for running Silverstripe `sake dev/build flush=1`
 ## Usage: devbuild
 ## Example: "ddev devbuild"
-# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
-## ProjectTypes: silverstripe, php
+## ProjectTypes: silverstripe
 ## ExecRaw: false
 
 sake dev/build flush=1

@@ -3,8 +3,7 @@
 ## Description: Lint documentation in a given module. Skips linting javascript in docs due to ambiguity. Pass "./" as the module name to lint the project itself.
 ## Usage: lint-docs <module-name>
 ## Flags: []
-# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
-## ProjectTypes: silverstripe, php
+## ProjectTypes: silverstripe
 ## ExecRaw: true
 
 MODULE_NAME=$1

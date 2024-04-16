@@ -3,8 +3,7 @@
 ## Description: Lint PHP code in a given module. Pass "./" as the module name to lint the project itself.
 ## Usage: lint <module-name>
 ## Flags: []
-# Note that most of my "silverstripe" projects just use the "php" type so I have greater control over them
-## ProjectTypes: silverstripe, php
+## ProjectTypes: silverstripe
 ## ExecRaw: true
 
 MODULE_NAME=$1

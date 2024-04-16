@@ -120,12 +120,13 @@ final class ProjectCreatorHelper
                 $db,
                 '--webserver-type=apache-fpm',
                 '--webimage-extra-packages=php${DDEV_PHP_VERSION}-tidy',
-                '--project-type=php',
+                '--project-type=silverstripe',
                 '--php-version=' . $input->getOption('php-version'),
                 '--project-name=' . $projectName,
                 '--timezone=Pacific/Auckland',
                 '--docroot=public',
                 '--create-docroot',
+                '--disable-settings-management',
             ]
         );
         if (!$success) {
