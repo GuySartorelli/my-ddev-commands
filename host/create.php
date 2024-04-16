@@ -443,10 +443,13 @@ if (!$success) {
     exit(1);
 }
 
-// Don't fail if we didn't get PRs in - we can add those manually if needs be.
 if (!empty($prs) && $input->getOption('pr-has-deps')) {
-    // If PRs have dependencies, handle that before composer isntall.
+    // If PRs have dependencies, handle that before composer install.
     handlePRsWithDeps();
+    // The lock file doesn't know about those deps, so composer install would have failed
+    // and for some reason composer update doesn't work in its place, so we must remove
+    // the lock file before installing.
+    $filesystem->remove('composer.lock');
 }
 
 // Run composer install
