@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
-## Usage: clone <git-repo-or-identifier>
-## Description: Clone a git repo and optionally check out a PR based on the URL into a predetermined directory.
+## Usage: clone <git-repo-or-identifier> [...git-repos-or-identifiers]
+## Description: Clone one or more git repos and optionally check out PRs based on the URLs into a predetermined directory.
 ## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
@@ -33,7 +33,7 @@ $definition = new InputDefinition([
     new InputArgument(
         'identifier',
         InputArgument::REQUIRED | InputArgument::IS_ARRAY,
-        'URL pr org/repo#123 reference to a GitHub repo - optionally for a specific pull request'
+        'URL or org/repo#123 reference to a GitHub repo - optionally for a specific pull request'
     ),
 ]);
 $input = Validation::validate($definition);
