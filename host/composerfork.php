@@ -8,7 +8,6 @@
 ## ExecRaw: false
 
 use GuySartorelli\DdevPhpUtils\ComposerJsonService;
-use GuySartorelli\DdevPhpUtils\DDevHelper;
 use GuySartorelli\DdevPhpUtils\GitHubService;
 use GuySartorelli\DdevPhpUtils\Output;
 use GuySartorelli\DdevPhpUtils\Validation;
