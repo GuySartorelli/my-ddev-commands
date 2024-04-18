@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [[ $# == 2 ]]; then
+    if [[ $2 =~ ^dev/t ]]; then
+        OUTPUT=$(sake dev/tasks)
+        if [[ $? != 0 ]]; then
+            echo "dev/tasks"
+            exit
+        fi
+        while IFS= read -r line; do
+            # Strip whitespace
+            line=$(echo $line | xargs)
+            # Only bother with lines that are in the list of options
+            if [[ $line =~ ^\+ ]]; then
+                details=$(echo $line | cut -d ':' -f 1)
+                name=$(echo $line | cut -d ':' -f 2)
+                echo -e "${name# sake }\t${details#+ }"
+            fi
+        done <<< "${OUTPUT//\*/+}"
+        exit
+    elif [[ $2 =~ ^dev/g ]]; then
+        echo "dev/graphql/build"
+        exit
+    else
+        OUTPUT=$(sake dev)
+        if [[ $? != 0 ]]; then
+            echo -e "dev\ndev/tasks\ndev/config\ndev/build\ndev/graphql\ndev/graphql/build"
+            exit
+        fi
+        while IFS= read -r line; do
+            # Strip whitespace
+            line=$(echo $line | xargs)
+            # Only bother with lines that are in the list of options
+            if [[ $line =~ ^sake ]]; then
+                name=$(echo $line | cut -d ':' -f 1)
+                details=$(echo $line | cut -d ':' -f 2)
+                echo -e "${name#sake }\t$details"
+            fi
+        done <<< "$OUTPUT"
+        exit
+    fi
+elif [[ $# == 3 ]]; then
+    echo "flush=1"
+fi
