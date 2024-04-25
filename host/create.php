@@ -344,8 +344,7 @@ function setupComposerProject(): bool
     includeOptionalModule('php-parallel-lint/php-parallel-lint', isDev: true);
     includeOptionalModule('php-parallel-lint/php-console-highlighter', isDev: true);
     // for linting docs
-    includeOptionalModule('silverstripe/markdown-php-codesniffer', isDev: true);
-    includeOptionalModule('slevomat/coding-standard', isDev: true);
+    includeOptionalModule('silverstripe/documentation-lint', isDev: true);
     // Always include dev docs if we're not using sink, which has it as a dependency
     includeOptionalModule('silverstripe/developer-docs', ($input->getOption('recipe') !== 'silverstripe/recipe-kitchen-sink'));
 

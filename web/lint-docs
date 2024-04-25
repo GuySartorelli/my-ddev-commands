@@ -7,7 +7,6 @@
 ## ExecRaw: true
 
 MODULE_NAME=$1
-ERRORS=0
 
 if [ -z "$MODULE_NAME" ]; then
     echo "A module name (or './' for the project itself) must be passed in."
@@ -30,52 +29,19 @@ if [ -z "$MODULE_DIR" ]; then
     exit 1
 fi
 
-if ! [ -f "$MODULE_DIR/package.json" ]; then
-    echo "No package.json file for $MODULE_NAME - cannot lint"
+if ! [ -f "$MODULE_DIR/.doclintrc" ]; then
+    echo "No .doclintrc file for $MODULE_NAME - cannot lint documentation."
     echo "Did you mean 'ddev lint'?"
-    exit 0
+    exit 1
 fi
 
-SCRIPTS=$(jq -r '.scripts | keys[]' "$MODULE_DIR/package.json" 2>/dev/null)
-
-HAS_IT=$(echo "$SCRIPTS" | grep "^lint-php$")
-if [ -f "$MODULE_DIR/phpcs.xml" ]; then
-    PHPCS_STANDARD="$MODULE_DIR/phpcs.xml"
-elif [ -f "$MODULE_DIR/phpcs.xml.dist" ]; then
-    PHPCS_STANDARD="$MODULE_DIR/phpcs.xml.dist"
-fi
-if [ -n "$HAS_IT" ] && [ -f "vendor/bin/mdphpcs" ] && [ -n "$PHPCS_STANDARD" ]; then
-    # we could get the path from the script but I'm too lazy to figure that out sooo....
-    if [ -d "$MODULE_DIR/docs" ]; then
-        DOC_DIR="$MODULE_DIR/docs"
-    elif [ -d "$MODULE_DIR/en" ]; then
-        DOC_DIR="$MODULE_DIR/en"
-    fi
-    if [ -n "$DOC_DIR" ]; then
-        echo "Linting PHP in docs"
-        vendor/bin/mdphpcs -p --colors --standard=$PHPCS_STANDARD $DOC_DIR
-        if [ $? -ne 0 ]; then
-            ERRORS+=1
-        fi
-    else
-        echo "Couldn't find docs dir for PHP linting"
-    fi
-else
-    echo "Skipping php in docs"
+if ! [ -f "vendor/bin/doclint" ]; then
+    echo "Missing doclint binary - make sure you've installed silverstripe/documentation-lint"
+    exit 1
 fi
 
-cd $MODULE_DIR
-
-# lint doc markdown
-HAS_IT=$(echo "$SCRIPTS" | grep "^lint-md$")
-if [ -n "$HAS_IT" ]; then
-    echo "Linting markdown in docs"
-    yarn install && yarn lint-md
-    if [ $? -ne 0 ]; then
-        ERRORS+=1
-    fi
-else
-    echo "Skipping markdown in docs"
+echo "Linting docs in $MODULE_DIR"
+vendor/bin/doclint $MODULE_DIR
+if [ $? -ne 0 ]; then
+    exit 1
 fi
-
-exit $ERRORS

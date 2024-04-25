@@ -121,59 +121,50 @@ if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
         Output::step('Pre-push hook already exists');
     } else {
         Output::step('Creating pre-push hook');
-        if ($moduleName === 'silverstripe/developer-docs') {
-            $hook = <<<HOOK
-            #!/bin/bash
+        $doclintRcPath = Path::join($moduleDir, '.doclintrc');
+        $canLintPhp = $moduleName === 'silverstripe/developer-docs' ? 0 : 1;
+        $hookCode = '';
+        // Include doc linting
+        $hook = <<<HOOK
+        #!/bin/bash
 
-            # Ensures PHP code is linted before pushing changes.
-            # Called by "git push" after it has checked the remote status, but before anything has been pushed.
-            # If this script exits with a non-zero status nothing will be pushed.
-            #
-            # This hook is called with the following parameters:
-            #
-            # $1 -- Name of the remote to which the push is being done
-            # $2 -- URL to which the push is being done
+        # Ensures PHP code and docs are linted before pushing changes.
+        # Called by "git push" after it has checked the remote status, but before anything has been pushed.
+        # If this script exits with a non-zero status nothing will be pushed.
+        #
+        # This hook is called with the following parameters:
+        #
+        # $1 -- Name of the remote to which the push is being done
+        # $2 -- URL to which the push is being done
 
-            # clear stdin so phpcs doesn't try to use it. Sigh.
-            read -t 0.1 -n 10000 discard
-            # do the linting
+        # clear stdin so phpcs doesn't try to use it. Sigh.
+        read -t 0.1 -n 10000 discard
+
+        # Lint documentation
+        if [ -f $doclintRcPath ]; then
+            echo "Running ddev lint-docs"
             ddev lint-docs $moduleName
-
             if [ $? -ne 0 ]; then
-                echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
+                echo "DOC LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
                 exit 1
             fi
+            # make sure there's a blank line between docs and PHP linting so it's easier to see what's what
+            echo ""
+        fi
 
-            echo "PASSED LINTING"
-            exit 0
-            HOOK;
-        } else {
-            $hook = <<<HOOK
-            #!/bin/bash
-
-            # Ensures PHP code is linted before pushing changes.
-            # Called by "git push" after it has checked the remote status, but before anything has been pushed.
-            # If this script exits with a non-zero status nothing will be pushed.
-            #
-            # This hook is called with the following parameters:
-            #
-            # $1 -- Name of the remote to which the push is being done
-            # $2 -- URL to which the push is being done
-
-            # clear stdin so phpcs doesn't try to use it. Sigh.
-            read -t 0.1 -n 10000 discard
-            # do the linting
+        # Lint PHP
+        if [ $canLintPhp -eq 1 ]; then
+            echo "Running ddev lint"
             ddev lint $moduleName
-
             if [ $? -ne 0 ]; then
-                echo "LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
+                echo "PHP LINTING FAILED - FIX LINTING ISSUES BEFORE PUSHING"
                 exit 1
             fi
+        fi
 
-            echo "PASSED LINTING"
-            exit 0
-            HOOK;
-        }
+        echo "PASSED LINTING"
+        exit 0
+        HOOK;
         file_put_contents($hookPath, $hook);
         chmod($hookPath, 0755);
     }
