@@ -1,0 +1,24 @@
+#!/bin/bash
+
+PARTIAL=$1
+# if there's no partial, provide the current project as an option
+if [[ $PARTIAL == '' ]]; then
+    echo -e './\tThe project itself'
+fi
+
+ACCEPTABLE_ORGS='\(silverstripe\|symbiote\|dnadesign\|tractorcow\|bringyourownideas\|lekoala\|cwp\|colymba\|undefinedoffset\)'
+
+if [[ $PARTIAL == *"/"* ]]; then
+    # Split these out so we can subsitute partial later if needed
+    ORG=$(echo $PARTIAL | cut -d '/' -f 1)
+    PARTIAL=$(echo $PARTIAL | cut -d '/' -f 2)
+elif [[ $PARTIAL == '' ]]; then
+    # if we have no partial, check for all libraries but only in specific orgs
+    ORG=$ACCEPTABLE_ORGS
+    PARTIAL=''
+else
+    # if we do have a partial, check all orgs for it - but also check the case where the partial is an org
+    find 'vendor' -maxdepth 2 -type d -regex "vendor/\($PARTIAL.*/.*\|$ACCEPTABLE_ORGS/.*$PARTIAL.*\)" -printf '%P\n'
+    exit
+fi
+find 'vendor' -maxdepth 2 -type d -regex "vendor/$ORG/.*$PARTIAL.*" -printf '%P\n'
