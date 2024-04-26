@@ -26,8 +26,8 @@ final class DDevHelper
         $process = new Process(['ddev', $command, ...$args]);
         $process->setTimeout(null);
         $process->setTty(true);
-        $process->run();
-        return $process->isSuccessful();
+        $statusCode = $process->run();
+        return $process->isSuccessful() && $statusCode === 0;
     }
 
     /**
@@ -44,8 +44,8 @@ final class DDevHelper
 
         $process = new Process(['ddev', $command, ...$args]);
         $process->setTimeout(null);
-        $process->run([Output::class, 'handleProcessOutput']);
-        return $process->isSuccessful();
+        $statusCode = $process->run([Output::class, 'handleProcessOutput']);
+        return $process->isSuccessful() && $statusCode === 0;
     }
 
     /**
