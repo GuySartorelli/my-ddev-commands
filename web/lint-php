@@ -2,9 +2,31 @@
 
 ## Description: Lint PHP code in a given module. Pass "./" as the module name to lint the project itself.
 ## Usage: lint <module-name>
-## Flags: []
+## Flags: [{"Name":"fix","Shorthand":"f","Type":"bool","Usage":"Fix automatically-fixable linting problems."}]
 ## ProjectTypes: silverstripe
 ## ExecRaw: true
+
+# Parse flags
+DO_FIX=0
+OPTS=$(getopt -o 'f' --long 'fix' -n 'ddev.lint-docs' -- "$@")
+eval set -- "$OPTS"
+while true; do
+    case "$1" in
+        '-f'|'--fix')
+            DO_FIX=1
+            shift
+            continue
+        ;;
+        '--')
+            shift
+            break
+        ;;
+        *)
+            echo "Internal error! got '$1'" >&2
+            exit 1
+        ;;
+    esac
+done
 
 MODULE_NAME=$1
 ERRORS=0
@@ -58,8 +80,12 @@ if [ -f "vendor/bin/phpcs" ]; then
     fi
 
     if [ -n "$PHPCS_STANDARD" ]; then
-        echo "Running phpcs"
-        vendor/bin/phpcs -p --colors --standard=$PHPCS_STANDARD "${LINT_PATHS[@]}"
+        PHPCS_BIN='phpcs'
+        if [ $DO_FIX -eq 1 ]; then
+            PHPCS_BIN='phpcbf'
+        fi
+        echo "Running $PHPCS_BIN"
+        vendor/bin/$PHPCS_BIN -p --colors --standard=$PHPCS_STANDARD "${LINT_PATHS[@]}"
         if [ $? -ne 0 ]; then
             ERRORS+=1
         fi

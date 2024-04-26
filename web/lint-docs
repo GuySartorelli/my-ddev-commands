@@ -2,9 +2,31 @@
 
 ## Description: Lint documentation in a given module. Skips linting javascript in docs due to ambiguity. Pass "./" as the module name to lint the project itself.
 ## Usage: lint-docs <module-name>
-## Flags: []
+## Flags: [{"Name":"fix","Shorthand":"f","Type":"bool","Usage":"Fix automatically-fixable linting problems."}]
 ## ProjectTypes: silverstripe
 ## ExecRaw: true
+
+# Parse flags
+FLAGS=
+OPTS=$(getopt -o 'f' --long 'fix' -n 'ddev.lint-docs' -- "$@")
+eval set -- "$OPTS"
+while true; do
+    case "$1" in
+        '-f'|'--fix')
+            FLAGS='--fix'
+            shift
+            continue
+        ;;
+        '--')
+            shift
+            break
+        ;;
+        *)
+            echo "Internal error! got '$1'" >&2
+            exit 1
+        ;;
+    esac
+done
 
 MODULE_NAME=$1
 
@@ -41,7 +63,7 @@ if ! [ -f "vendor/bin/doclint" ]; then
 fi
 
 echo "Linting docs in $MODULE_DIR"
-vendor/bin/doclint $MODULE_DIR
+vendor/bin/doclint $MODULE_DIR $FLAGS
 if [ $? -ne 0 ]; then
     exit 1
 fi
