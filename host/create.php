@@ -331,6 +331,8 @@ function setupComposerProject(): bool
     DDevHelper::run('composer', ['config', 'allow-plugins.composer/installers', 'true']);
     DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/recipe-plugin', 'true']);
     DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/vendor-plugin', 'true']);
+    // required for phpstan
+    DDevHelper::run('composer', ['config', 'allow-plugins.phpstan/extension-installer', 'true']);
     // required for linting docs
     DDevHelper::run('composer', ['config', 'allow-plugins.dealerdirect/phpcodesniffer-composer-installer', 'true']);
 
@@ -343,6 +345,8 @@ function setupComposerProject(): bool
     // for linting
     includeOptionalModule('php-parallel-lint/php-parallel-lint', isDev: true);
     includeOptionalModule('php-parallel-lint/php-console-highlighter', isDev: true);
+    includeOptionalModule('silverstripe/standards', isDev: true);
+    includeOptionalModule('phpstan/extension-installer', isDev: true);
     // for linting docs
     includeOptionalModule('silverstripe/documentation-lint', isDev: true);
     // Always include dev docs if we're not using sink, which has it as a dependency
