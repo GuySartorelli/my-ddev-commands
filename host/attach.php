@@ -92,12 +92,12 @@ function getPhpVersionFromPlatform(): ?string
 
     $parsed = Yaml::parseFile('.platform.yml', Yaml::PARSE_OBJECT_FOR_MAP);
 
-    if (!isset($parsed->php_settings->version) || !is_string($parsed->php_settings->version)) {
+    if (!isset($parsed->php_settings->version) || !is_numeric($parsed->php_settings->version)) {
         Output::warning('Invalid or missing PHP version in .platform.yml file - checking composer.json instead.');
         return null;
     }
 
-    return $parsed->php_settings->version;
+    return (string) $parsed->php_settings->version;
 }
 
 function getPhpVersionFromComposer(): ?string
