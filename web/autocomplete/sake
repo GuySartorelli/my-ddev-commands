@@ -2,6 +2,7 @@
 
 if [[ $# == 2 ]]; then
     if [[ $2 =~ ^dev/t ]]; then
+        OUTPUT=$(sake dev/tasks)
         if [[ $? != 0 ]]; then
             echo "dev/tasks"
             exit
