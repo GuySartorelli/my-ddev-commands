@@ -36,6 +36,8 @@ stow --target=$HOME/.ddev/commands .
     clone_dir: "~/dump/temp"
     # Token used for github API when fetching PR info
     github_token: "YOUR_TOKEN_HERE"
+    # Token shared with Composer (e.g. when installing forks)
+    composer_token: "YOUR_TOKEN_HERE"
     ```
 
 1. enjoy.

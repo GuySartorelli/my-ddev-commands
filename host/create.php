@@ -318,6 +318,8 @@ function setupComposerProject(): bool
     global $input;
     Output::step('Creating composer project');
 
+    ProjectCreatorHelper::shareComposerToken();
+
     // Run composer command
     $args = ProjectCreatorHelper::prepareComposerCommand($input, 'create');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
@@ -326,6 +328,10 @@ function setupComposerProject(): bool
         return false;
     }
     Output::endProgressBar();
+
+    // We need to do this again, because it's only shared for as long as the container is up
+    // and the container gets restarted as part of `ddev composer create` for some reason.
+    ProjectCreatorHelper::shareComposerToken();
 
     // Add allowed plugins, in case the recipe you're using doesn't have them in its composer config
     DDevHelper::run('composer', ['config', 'allow-plugins.composer/installers', 'true']);

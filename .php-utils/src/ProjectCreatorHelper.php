@@ -212,4 +212,18 @@ final class ProjectCreatorHelper
         }
         return true;
     }
+
+    /**
+     * Share a GitHub token with Composer - used when installing forks.
+     * Note this is only shared for as long as the container is up.
+     * As soon as the container is stopped (e.g. with ddev stop) the token is no longer shared.
+     */
+    public static function shareComposerToken(): void
+    {
+        $token = DDevHelper::getCustomConfig('composer_token');
+        if ($token) {
+            Output::step('Sharing token with Composer');
+            DDevHelper::runInteractiveOnVerbose('composer', ['config', '-g', 'github-oauth.github.com', $token]);
+        }
+    }
 }

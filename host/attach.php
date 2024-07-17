@@ -251,6 +251,8 @@ if (!$success) {
     exit(1);
 }
 
+ProjectCreatorHelper::shareComposerToken();
+
 // Run composer install
 if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::warning('Opted not to run `composer install` - dont forget to run that!');
