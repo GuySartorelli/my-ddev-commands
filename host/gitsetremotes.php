@@ -122,7 +122,7 @@ if (!$input->getOption('no-hooks') && $isModule && DDevHelper::isInProject()) {
     } else {
         Output::step('Creating pre-push hook');
         $doclintRcPath = Path::join($moduleDir, '.doclintrc');
-        $canLintPhp = ($moduleName === 'silverstripe/developer-docs' || $moduleName === 'silverstripe/frameworktest') ? 0 : 1;
+        $canLintPhp = ($moduleName === 'silverstripe/developer-docs' || $moduleName === 'silverstripe/documentation-lint' || $moduleName === 'silverstripe/frameworktest') ? 0 : 1;
         $hookCode = '';
         // Include doc linting
         $hook = <<<HOOK
