@@ -10,6 +10,9 @@ use Symfony\Component\Filesystem\Path;
 
 class ComposerJsonService
 {
+    public const KEY_REQUIRE = 'require';
+    public const KEY_REQUIRE_DEV = 'require-dev';
+
     private string $path;
     private Filesystem $fileSystem;
 
@@ -65,29 +68,42 @@ class ComposerJsonService
                 continue;
             }
 
-            $alias = $this->getCurrentComposerConstraint($composerName);
+            $key = $this->getKeyForDep($composerName) ?? self::KEY_REQUIRE;
+
+            $alias = $this->getCurrentComposerConstraint($composerName, $key);
             if (!$alias) {
                 $alias = $parser->normalizeBranch($fork['baseBranch']);
             }
-            if (str_starts_with('^', $alias) || str_starts_with('!', $alias)) {
+            if (str_starts_with($alias, '^') || str_starts_with($alias, '!')) {
                 $alias = $parser->parseConstraints($alias)->getUpperBound()->getVersion();
             }
             $constraint = $parser->normalizeBranch($fork['prBranch']) . ' as ' . $alias;
 
             // Set dependency and repository info in composer.json
-            $json['require'][$composerName] = $constraint;
+            $json[$key][$composerName] = $constraint;
         }
 
         $this->setComposerJson($json);
     }
 
-    public function getCurrentComposerConstraint(string $dependency): string|null
+    public function getCurrentComposerConstraint(string $dependency, string $key = self::KEY_REQUIRE): string|null
     {
         $json = $this->getComposerJson();
 
-        if (!isset($json['require'][$dependency])) {
+        if (!isset($json[$key][$dependency])) {
             return null;
         }
-        return str_replace('/^.*? as /', '', $json['require'][$dependency]);
+        return str_replace('/^.*? as /', '', $json[$key][$dependency]);
+    }
+
+    public function getKeyForDep(string $dependency): ?string
+    {
+        $json = $this->getComposerJson();
+        foreach ([self::KEY_REQUIRE, self::KEY_REQUIRE_DEV] as $key) {
+            if (isset($json[$key][$dependency])) {
+                return $key;
+            }
+        }
+        return null;
     }
 }
