@@ -103,6 +103,9 @@ if [ -f "vendor/bin/phpstan" ]; then
     fi
 
     if [ -n "$PHPSTAN_CONFIG" ]; then
+        echo "Clearing phpstan cached results"
+        vendor/bin/phpstan clear-result-cache
+
         echo "Running phpstan"
         # We don't pass lint paths in here because our phpstan config declares the paths
         # and tests are explicitly not linted right now
