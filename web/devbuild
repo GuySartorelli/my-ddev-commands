@@ -6,7 +6,18 @@
 ## ProjectTypes: silverstripe
 ## ExecRaw: false
 
-sake dev/build flush=1
-# Then flush for webserver - see https://github.com/silverstripe/silverstripe-framework/issues/11145
-echo "Flushing for webserver"
-curl "${DDEV_PRIMARY_URL}/dev?flush=1" -o /dev/null
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SS_VERSION=$($SCRIPT_DIR/.ss-version)
+
+if [[ $SS_VERSION > 5 ]] then
+
+    sake db:build --flush
+
+else
+
+    sake dev/build flush=1
+    # Then flush for webserver - see https://github.com/silverstripe/silverstripe-framework/issues/11145
+    echo "Flushing for webserver"
+    curl "${DDEV_PRIMARY_URL}/dev?flush=1" -o /dev/null
+
+fi

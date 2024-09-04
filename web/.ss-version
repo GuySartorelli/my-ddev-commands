@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Finds the version of Silverstripe CMS running for this project
+
+# If there's no composer file, there's no ss
+if ! [ -f composer.json ]; then
+    exit
+fi
+
+JSON_INFO=$(composer show silverstripe/framework --format=json 2>/dev/null)
+VERSION=$(echo -E $JSON_INFO | jq -r '.versions[]')
+
+# If there's no version, we can't do anything
+if [ -z "${VERSION}" ]; then
+    exit
+fi
+
+# Format should be one of the following
+
+# - dev-pulls/6/some-branch
+if [[ "$VERSION" =~ ^dev-pulls/([0-9])(\.[0-9])?/ ]]; then
+    echo ${BASH_REMATCH[1]}
+fi
+
+# - 6.0.x-dev
+# - 5.2.3
+if [[ "$VERSION" =~ ^([0-9])(\.[0-9])?/ ]]; then
+    echo ${BASH_REMATCH[1]}
+fi
