@@ -3,7 +3,7 @@
 
 ## Usage: create [options] <project-name>
 ## Description: Creates a new opinionated Silverstripe CMS DDEV project inside a pre-defined directory.
-## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"recipe","Shorthand":"r","Type":"string","Usage":"The recipe to install. Options: core, cms, installer, sink, or any recipe composer name (e.g. 'silverstripe/recipe-cms')","DefValue":"installer"},{"Name":"constraint","Shorthand":"c","Type":"string","Usage":"The version constraint to use for the installed recipe.","DefValue":"5.x-dev"},{"Name":"extra-module","Shorthand":"m","Type":"string","Usage":"Any additional modules to be required before dev/build. Can be used multiple times."},{"Name":"composer-option","Shorthand":"o","Type":"string","Usage":"Any additional arguments to be passed to the composer create-project command."},{"Name":"php-version","Shorthand":"P","Type":"string","Usage":"The PHP version to use for this environment. Uses the lowest allowed version by default."},{"Name":"db","Type":"string","Usage":"The database Type to be used. Must be one of 'mariadb', 'mysql'.","DefValue":"mysql"},{"Name":"db-version","Type":"string","Usage":"The version of the database docker image to be used."},{"Name":"pr","Type":"string","Usage":"Optional pull request URL or github referece, e.g. 'silverstripe/silverstripe-framework#123' or 'https://github.com/silverstripe/silverstripe-framework/pull/123'. If included, the command will checkout out the PR branch in the appropriate vendor package. Can be used multiple times."},{"Name":"pr-has-deps","Type":"bool","Usage":"A PR from the --pr option has dependencies which need to be included in the first composer install.","DefValue":"false"},{"Name":"include-recipe-testing","Type":"bool","Usage":"Include silverstripe/recipe-testing even if it isnt in the chosen recipe.","DefValue":"true"},{"Name":"include-frameworktest","Type":"bool","Usage":"Include silverstripe/frameworktest even if it isn't in the chosen recipe.","DefValue":"true"}]
+## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"recipe","Shorthand":"r","Type":"string","Usage":"The recipe to install. Options: core, cms, installer, sink, or any recipe composer name (e.g. 'silverstripe/recipe-cms')","DefValue":"installer"},{"Name":"constraint","Shorthand":"c","Type":"string","Usage":"The version constraint to use for the installed recipe.","DefValue":"5.x-dev"},{"Name":"extra-module","Shorthand":"m","Type":"string","Usage":"Any additional modules to be required before dev/build. Can be used multiple times."},{"Name":"composer-option","Shorthand":"o","Type":"string","Usage":"Any additional arguments to be passed to the composer create-project command."},{"Name":"php-version","Shorthand":"P","Type":"string","Usage":"The PHP version to use for this environment. Uses the lowest allowed version by default."},{"Name":"db","Type":"string","Usage":"The database Type to be used. Must be one of 'mariadb', 'mysql'.","DefValue":"mysql"},{"Name":"db-version","Type":"string","Usage":"The version of the database docker image to be used."},{"Name":"no-build","Type":"bool","Usage":"Don't run dev build."},{"Name":"pr","Type":"string","Usage":"Optional pull request URL or github referece, e.g. 'silverstripe/silverstripe-framework#123' or 'https://github.com/silverstripe/silverstripe-framework/pull/123'. If included, the command will checkout out the PR branch in the appropriate vendor package. Can be used multiple times."},{"Name":"pr-has-deps","Type":"bool","Usage":"A PR from the --pr option has dependencies which need to be included in the first composer install.","DefValue":"false"},{"Name":"include-recipe-testing","Type":"bool","Usage":"Include silverstripe/recipe-testing even if it isnt in the chosen recipe.","DefValue":"true"},{"Name":"include-frameworktest","Type":"bool","Usage":"Include silverstripe/frameworktest even if it isn't in the chosen recipe.","DefValue":"true"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 
@@ -121,6 +121,12 @@ $definition = new InputDefinition([
         null,
         InputOption::VALUE_REQUIRED,
         'The version of the database docker image to be used.'
+    ),
+    new InputOption(
+        'no-build',
+        null,
+        InputOption::VALUE_NONE,
+        'Dont run dev build.'
     ),
     new InputOption(
         'pr',
@@ -488,15 +494,19 @@ if (!$success) {
 }
 
 // Build database
-if (in_array('--no-install', $input->getOption('composer-option'))) {
-    Output::warning('--no-install passed to composer-option, cannot build database.');
+if ($input->getOption('no-build')) {
+    Output::warning("Skipping database build - run <options=bold>ddev exec sake dev/build</>");
 } else {
-    Output::step('Building database');
-    $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
-    if (!$success) {
-        Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
+    if (in_array('--no-install', $input->getOption('composer-option'))) {
+        Output::warning('--no-install passed to composer-option, cannot build database.');
+    } else {
+        Output::step('Building database');
+        $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
+        if (!$success) {
+            Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
+        }
+        Output::endProgressBar();
     }
-    Output::endProgressBar();
 }
 
 $details = DDevHelper::getProjectDetails();
