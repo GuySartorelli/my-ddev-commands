@@ -14,7 +14,17 @@ if [[ $SS_VERSION > 5 ]] then
         fi
     done
 
-    sake _complete --no-interaction -a1 -sbash -c$COMP_CWORD ${INPUT[@]}
+    sfcomplete=$(sake _complete --no-interaction -a1 -sbash -c$COMP_CWORD ${INPUT[@]})
+
+    if [[ "$sfcomplete" =~ \\ ]]; then
+        # If suggestions contains backslash (e.g. a FQCN) we need to escape the values.
+        # This works regardless of the host shell, while quoting worked for bash but failed for zsh
+        suggestions=$(for s in $sfcomplete; do printf $'%q\n' "$s"; done)
+    else
+        suggestions=$sfcomplete
+    fi
+
+    printf "%s\n" "${suggestions[@]}"
 
 else
 
