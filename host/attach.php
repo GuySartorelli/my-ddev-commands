@@ -228,12 +228,12 @@ function setupDdevProject(): bool
         return false;
     }
 
-    $hasBehat = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-selenium-standalone-chrome']);
+    $hasBehat = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-selenium-standalone-chrome']);
     if (!$hasBehat) {
         Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-selenium-standalone-chrome</> - add that manually.');
     }
 
-    $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-adminer']);
+    $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-adminer']);
     if (!$hasDbAdmin) {
         Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
     }
