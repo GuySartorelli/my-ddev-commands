@@ -321,7 +321,7 @@ function includeOptionalModule(string $moduleName, bool $shouldInclude = true, b
  */
 function setupComposerProject(): bool
 {
-    global $input;
+    global $input, $projectName;
     Output::step('Creating composer project');
 
     ProjectCreatorHelper::shareComposerToken();
@@ -334,6 +334,11 @@ function setupComposerProject(): bool
         return false;
     }
     Output::endProgressBar();
+
+    // Set "type" to "project" to silence warning about not having a version
+    DDevHelper::run('composer', ['config', 'type', 'project']);
+    // Set "name" to something other than installer, just for tidyness
+    DDevHelper::run('composer', ['config', 'name', 'local/' . $projectName]);
 
     // We need to do this again, because it's only shared for as long as the container is up
     // and the container gets restarted as part of `ddev composer create` for some reason.
