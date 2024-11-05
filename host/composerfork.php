@@ -29,7 +29,7 @@ $definition = new InputDefinition([
     new InputArgument(
         'fork-url',
         InputArgument::IS_ARRAY | InputArgument::REQUIRED,
-        'URL for the repo (and optionally pull request) to fork. Multiple PRs can be added.',
+        'URL for the repo (and optionally pull request) to fork. Multiple repos can be added.',
     ),
 ]);
 $input = Validation::validate($definition);
