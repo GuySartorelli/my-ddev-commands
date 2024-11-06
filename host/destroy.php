@@ -2,7 +2,7 @@
 <?php declare(strict_types=1);
 
 ## Usage: destroy <project>
-## Description: Fully destroy a project, removing all trace of its existence from the face of the... well, the computer.
+## Description: Fully destroy a project or multiple projects, removing all trace of its existence from the face of the... well, the computer.
 ## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
@@ -28,16 +28,16 @@ include_once $autoload;
 
 $definition = new InputDefinition([
     new InputArgument(
-        'project-name',
-        InputArgument::REQUIRED,
-        'The name of the project to destroy - use ddev list if you aren\'t sure.',
+        'project-names',
+        InputArgument::IS_ARRAY | InputArgument::REQUIRED,
+        'The name of the project(s) to destroy - use ddev list if you aren\'t sure.',
     ),
 ]);
 $input = Validation::validate($definition);
 
 // Validation
-$projectName = $input->getArgument('project-name');
-if (!$projectName) {
+$projectNames = $input->getArgument('project-names');
+if (empty($projectNames)) {
     return;
 }
 
@@ -46,41 +46,49 @@ if (empty($allProjects)) {
     throw new RuntimeException('There are no current DDEV projects to destroy');
 }
 
-$found = false;
 foreach ($allProjects as $projectDetails) {
-    if ($projectDetails->name !== $projectName) {
+    if (!in_array($projectDetails->name, $projectNames)) {
         continue;
     }
-    $found = true;
-    $projectRoot = $projectDetails->approot;
-    break;
+    $projectRoot[$projectDetails->name] = $projectDetails->approot;
 }
-
-if (!$found) {
-    throw new RuntimeException("Project $projectName doesn't exist");
+$missing = array_diff($projectNames, array_keys($projectRoot));
+if (count($missing) !== 0) {
+    throw new RuntimeException('These projects don\'t exist: ' . implode(', ', $missing));
 }
-
 
 // Execution
-Output::step("Destroying project $projectName");
+$numSucceeded = 0;
+foreach ($projectNames as $projectName) {
+    Output::step("Destroying project <options=bold>$projectName</>");
 
-chdir($projectRoot);
+    chdir($projectRoot[$projectName]);
 
-Output::step("Shutting down DDEV project");
-$success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y']);
-if (!$success) {
-    Output::error('Could not shut down DDEV project.');
-    return self::FAILURE;
+    Output::subStep("Shutting down DDEV project");
+    $success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y']);
+    if (!$success) {
+        Output::error('Could not shut down DDEV project.');
+        continue;
+    }
+
+    Output::subStep("Deleting project directory");
+    $filesystem = new Filesystem();
+    try {
+        $filesystem->remove($projectRoot[$projectName]);
+    } catch (IOExceptionInterface $e) {
+        Output::error('Could not delete project directory: ' . $e->getMessage());
+        Output::debug($e->getTraceAsString());
+        continue;
+    }
+
+    $numSucceeded++;
+    Output::step("Project {$projectName} successfully destroyed");
 }
 
-Output::step("Deleting project directory");
-$filesystem = new Filesystem();
-try {
-    $filesystem->remove($projectRoot);
-} catch (IOExceptionInterface $e) {
-    Output::error('Could not delete project directory: ' . $e->getMessage());
-    Output::debug($e->getTraceAsString());
-    return self::FAILURE;
+$numFailed = count($projectNames) - $numSucceeded;
+if ($numFailed !== 0) {
+    Output::error("Failed to destroy <options=bold>{$numFailed}</> projects");
+    exit(1);
+} else {
+    Output::success("Destroyed <options=bold>{$numSucceeded}</> projects successfully");
 }
-
-Output::success("Project <options=bold>{$projectName}</> successfully destroyed");

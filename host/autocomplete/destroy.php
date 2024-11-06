@@ -3,11 +3,6 @@
 
 use GuySartorelli\DdevPhpUtils\DDevHelper;
 
-// After we enter the project name, don't suggest a second one.
-if (count($argv) !== 3) {
-    return;
-}
-
 // Make sure autoload exists and include it
 $commandsDir = $_SERVER['HOME'] . '/.ddev/commands';
 $autoload = $commandsDir . '/.php-utils/vendor/autoload.php';
@@ -17,5 +12,14 @@ if (!file_exists($autoload)) {
 }
 include_once $autoload;
 
-// Return all known DDEV projects
-echo implode("\n", array_map(fn ($item) => "{$item->name}\t{$item->status}", DDevHelper::runJson('list')));
+// Get all known DDEV projects
+$projects = DDevHelper::runJson('list');
+// Remove projects already on the command line
+$args = array_slice($argv, 2);
+foreach ($projects as $i => $project) {
+    if (in_array($project->name, $args)) {
+        unset($projects[$i]);
+    }
+}
+// Output, including the status
+echo implode("\n", array_map(fn ($project) => "{$project->name}\t{$project->status}", $projects));
