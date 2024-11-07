@@ -193,7 +193,7 @@ final class ProjectCreatorHelper
     /**
      * Copy files to the project. Has to be done AFTER composer create
      */
-    public static function copyProjectFiles(string $commandsDir, string $copyTo, bool $replaceExisting = false): bool
+    public static function copyProjectFiles(string $commandsDir, string $copyTo, string $projectName, bool $replaceExisting = false): bool
     {
         Output::step('Copying opinionated files to project');
         try {
@@ -207,6 +207,44 @@ final class ProjectCreatorHelper
         } catch (IOExceptionInterface $e) {
             // @TODO replace this with more standardised error/failure handling.
             Output::error("Couldn't copy project files: {$e->getMessage()}");
+            Output::debug($e->getTraceAsString());
+            return false;
+        }
+
+        return static::createAppNameConfig($copyTo, $projectName);
+    }
+
+    private static function createAppNameConfig(string $copyTo, string $projectName): bool
+    {
+        Output::subStep('Creating config file to adjust application name');
+        $filesystem = new Filesystem();
+        $configDir = Path::join($copyTo, '.ddev-extra', '_config');
+
+        if (!is_dir($configDir)) {
+            $configDir = Path::join($copyTo, 'app', '_config');
+            if (!is_dir($configDir)) {
+                Output::error('Couldn\'t identify config directory');
+                return false;
+            }
+        }
+
+        $content = <<<EOL
+        ---
+        Name: ddev-extra-appname
+        ---
+        SilverStripe\Admin\LeftAndMain:
+          application_name: '$projectName'
+
+        SilverStripe\SiteConfig\SiteConfig:
+          extensions:
+            appname: DevTools\Extension\SiteConfigExtension
+        EOL;
+
+        try {
+            $filesystem->dumpFile(Path::join($configDir, 'appname.yml'), $content);
+        } catch (IOExceptionInterface $e) {
+            // @TODO replace this with more standardised error/failure handling.
+            Output::error("Couldn't create appname.yml: {$e->getMessage()}");
             Output::debug($e->getTraceAsString());
             return false;
         }

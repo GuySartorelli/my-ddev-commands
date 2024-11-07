@@ -292,7 +292,7 @@ if (file_exists('.env')) {
     }
 }
 
-$success = ProjectCreatorHelper::copyProjectFiles($commandsDir, './', false);
+$success = ProjectCreatorHelper::copyProjectFiles($commandsDir, './', $projectName, false);
 if (!$success) {
     // @TODO rollback?
     exit(1);

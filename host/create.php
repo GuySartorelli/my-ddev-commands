@@ -492,7 +492,7 @@ if (!empty($prs) && !$input->getOption('pr-has-deps')) {
     checkoutPRs();
 }
 
-$success = ProjectCreatorHelper::copyProjectFiles($commandsDir, $projectRoot, true);
+$success = ProjectCreatorHelper::copyProjectFiles($commandsDir, $projectRoot, $projectName, true);
 if (!$success) {
     // @TODO rollback?
     exit(1);
