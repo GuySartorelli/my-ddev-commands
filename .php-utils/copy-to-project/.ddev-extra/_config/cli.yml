@@ -1,0 +1,5 @@
+---
+Name: ddev-extra-cli
+---
+SilverStripe\Cli\Sake:
+  hide_completion_command: true
