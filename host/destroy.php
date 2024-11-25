@@ -46,6 +46,7 @@ if (empty($allProjects)) {
     throw new RuntimeException('There are no current DDEV projects to destroy');
 }
 
+$projectRoot = [];
 foreach ($allProjects as $projectDetails) {
     if (!in_array($projectDetails->name, $projectNames)) {
         continue;
