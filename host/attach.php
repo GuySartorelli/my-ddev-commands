@@ -157,6 +157,7 @@ function getPhpVersion(): string
     $phpVersion = $input->getOption('php-version');
     // @TODO validate php version?
     if ($phpVersion) {
+        Output::subStep('Using explicit PHP version from flags');
         return $phpVersion;
     }
 
