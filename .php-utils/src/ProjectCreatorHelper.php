@@ -260,8 +260,10 @@ final class ProjectCreatorHelper
     {
         $token = DDevHelper::getCustomConfig('composer_token');
         if ($token) {
-            Output::step('Sharing token with Composer');
+            Output::subStep('Sharing token with Composer');
             DDevHelper::runInteractiveOnVerbose('composer', ['config', '-g', 'github-oauth.github.com', $token]);
+        } else {
+            Output::warning('No composer token to share - check composer_token in .php-utils/config.yml');
         }
     }
 }

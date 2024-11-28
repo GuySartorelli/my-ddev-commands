@@ -327,6 +327,7 @@ function setupComposerProject(): bool
     ProjectCreatorHelper::shareComposerToken();
 
     // Run composer command
+    Output::subStep('Running composer create');
     $args = ProjectCreatorHelper::prepareComposerCommand($input, 'create');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
     if (!$success) {
@@ -335,6 +336,7 @@ function setupComposerProject(): bool
     }
     Output::endProgressBar();
 
+    Output::subStep('Updating composer name and type');
     // Set "type" to "project" to silence warning about not having a version
     DDevHelper::run('composer', ['config', 'type', 'project']);
     // Set "name" to something other than installer, just for tidyness
