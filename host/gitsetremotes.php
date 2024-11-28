@@ -94,6 +94,14 @@ if ($input->getOption('security')) {
     }
 }
 
+// Remove composer remote
+// This remote exists if cc was added via a fork. It results in git status showing weird results
+$existingRemotes = $gitRepo->run('remote');
+if (str_contains($existingRemotes, 'composer')) {
+    Output::step('Removing composer remote');
+    $gitRepo->run('remote', ['remove', 'composer']);
+}
+
 // Rename origin
 if ($input->getOption('rename-origin')) {
     if (in_array('orig', $remotes)) {
