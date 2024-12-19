@@ -40,6 +40,11 @@ $projectNames = $input->getArgument('project-names');
 if (empty($projectNames)) {
     return;
 }
+// Technically it shouldn't ever be included in the JSON output of `ddev list` anyway,
+// but in case that ever changes, explicitly don't allow destroying the Router.
+if (in_array('Router', $projectNames)) {
+    throw new RuntimeException('The Router must not be destroyed');
+}
 
 $allProjects = DDevHelper::runJson('list');
 if (empty($allProjects)) {
