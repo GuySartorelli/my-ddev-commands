@@ -336,16 +336,12 @@ function setupComposerProject(): bool
     }
     Output::endProgressBar();
 
+    // Some changes to composer.json
     Output::subStep('Updating composer name and type');
     // Set "type" to "project" to silence warning about not having a version
     DDevHelper::run('composer', ['config', 'type', 'project']);
     // Set "name" to something other than installer, just for tidyness
     DDevHelper::run('composer', ['config', 'name', 'local/' . $projectName]);
-
-    // We need to do this again, because it's only shared for as long as the container is up
-    // and the container gets restarted as part of `ddev composer create` for some reason.
-    ProjectCreatorHelper::shareComposerToken();
-
     // Add allowed plugins, in case the recipe you're using doesn't have them in its composer config
     DDevHelper::run('composer', ['config', 'allow-plugins.composer/installers', 'true']);
     DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/recipe-plugin', 'true']);
@@ -357,6 +353,10 @@ function setupComposerProject(): bool
 
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');
+    // We need to do this again, because it's only shared for as long as the container is up
+    // and the container gets restarted as part of `ddev composer create` for some reason.
+    ProjectCreatorHelper::shareComposerToken();
+
     includeOptionalModule('behat/mink-selenium2-driver', isDev: true);
     includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
