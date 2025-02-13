@@ -68,7 +68,11 @@ $numSucceeded = 0;
 foreach ($projectNames as $projectName) {
     Output::step("Destroying project <options=bold>$projectName</>");
 
-    chdir($projectRoot[$projectName]);
+    $successSwap = chdir($projectRoot[$projectName]);
+    if (!$successSwap) {
+        Output::error('Could not swap to DDEV project.');
+        continue;
+    }
 
     Output::subStep("Shutting down DDEV project");
     $success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y']);
