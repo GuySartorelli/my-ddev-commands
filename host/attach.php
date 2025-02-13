@@ -258,7 +258,7 @@ ProjectCreatorHelper::shareComposerToken();
 if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::warning('Opted not to run `composer install` - dont forget to run that!');
 } else {
-    Output::step('Running composer install now that dependencies have been added');
+    Output::step('Running composer install');
     $args = ProjectCreatorHelper::prepareComposerCommand($input, 'install');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
     if (!$success) {
