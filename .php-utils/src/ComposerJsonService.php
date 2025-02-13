@@ -70,7 +70,13 @@ class ComposerJsonService
 
             $key = $this->getKeyForDep($composerName) ?? self::KEY_REQUIRE;
 
-            $alias = $this->getCurrentComposerConstraint($composerName, $key);
+            if ($composerName === 'silverstripe/supported-modules') {
+                // This is a special case where the `main` branch is used, but semver is tagged.
+                // We're on 1.x right now - if that changes I'll need to change this ugly magic number.
+                $alias = '1.99.999';
+            } else {
+                $alias = $this->getCurrentComposerConstraint($composerName, $key);
+            }
             if (!$alias) {
                 $alias = $parser->normalizeBranch($fork['baseBranch']);
             }
