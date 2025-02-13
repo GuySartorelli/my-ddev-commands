@@ -8,6 +8,7 @@
 # Let this work from anywhere
 cd "${DDEV_APPROOT}"
 
+# Check vendor/ first
 for D in `find 'vendor' -mindepth 2 -maxdepth 2 -type d`; do
     # For some reason `cd "${D}"` doesn't work so use full path
     cd "${DDEV_APPROOT}/${D}"
@@ -17,6 +18,25 @@ for D in `find 'vendor' -mindepth 2 -maxdepth 2 -type d`; do
     fi
     # Skip this repo because it's always changed by composer install
     if [[ "${D}" =~ /phpstan/extension-installer$ ]]; then
+        continue
+    fi
+
+    # Check git status - if not "nothing to commit", echo it.
+    git_status=$(git status)
+    if ! [[ "$git_status" =~ "nothing to commit, working tree clean" ]]; then
+        has_changes=1
+        echo "${D}"
+    fi
+    cd - >/dev/null
+done
+
+# Check themes
+cd "${DDEV_APPROOT}"
+for D in `find 'themes' -mindepth 1 -maxdepth 1 -type d`; do
+    # For some reason `cd "${D}"` doesn't work so use full path
+    cd "${DDEV_APPROOT}/${D}"
+    # Skip if missing .git dir
+    if ! [[ -d '.git' ]]; then
         continue
     fi
 
