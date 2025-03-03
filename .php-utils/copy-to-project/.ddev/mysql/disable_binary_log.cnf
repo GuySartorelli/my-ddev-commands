@@ -1,0 +1,7 @@
+# We dont need to track binary logging locally.
+# If you choose to bring this back, watch out for DB size growth when certain actions are happening.
+# The easiest way of manually removing these files is running
+# `PURGE BINARY LOGS BEFORE '2025-10-02 22:46:26';`
+# within the query console (with admin permissions, adjusting date as required)
+[mysqld]
+skip-log-bin
