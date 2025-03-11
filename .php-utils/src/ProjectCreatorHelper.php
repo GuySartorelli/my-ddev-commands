@@ -266,4 +266,20 @@ final class ProjectCreatorHelper
             Output::warning('No composer token to share - check composer_token in .php-utils/config.yml');
         }
     }
+
+    public static function setPreferredInstall(): void
+    {
+        Output::subStep('Setting preferred install type for supported organisations');
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.silverstripe/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.silverstripe-themes/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.creative-commoners/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.symbiote/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.tractorcow/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.silverstripe/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.dnadesign/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.bringyourownideas/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.colymba/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.cwp/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.*/*', 'dist']);
+    }
 }

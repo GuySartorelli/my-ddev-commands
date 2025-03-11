@@ -100,7 +100,7 @@ $definition = new InputDefinition([
         'o',
         InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
         'Any additional arguments to be passed to the composer create-project command.',
-        ['--prefer-source']
+        []
     ),
     new InputOption(
         'php-version',
@@ -336,6 +336,8 @@ function setupComposerProject(): bool
     }
     Output::endProgressBar();
 
+    ProjectCreatorHelper::setPreferredInstall();
+
     // Some changes to composer.json
     Output::subStep('Updating composer name and type');
     // Set "type" to "project" to silence warning about not having a version
@@ -422,7 +424,7 @@ function checkoutPRs(): bool
         if (!$filesystem->exists($prPath)) {
             // Try composer require-ing it - and if that fails, toss out a warning about it and move on.
             Output::subStep($composerName . ' is not yet added as a dependency - requiring it.');
-            $checkoutSuccess = DDevHelper::runInteractiveOnVerbose('composer', ['require', $composerName, '--prefer-source']);
+            $checkoutSuccess = DDevHelper::runInteractiveOnVerbose('composer', ['require', $composerName]);
             if (!$checkoutSuccess) {
                 failCheckout($composerName, $success);
                 continue;

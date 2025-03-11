@@ -44,7 +44,7 @@ $definition = new InputDefinition([
         'o',
         InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
         'Any additional arguments to be passed to the composer create-project command.',
-        ['--prefer-source']
+        []
     ),
     new InputOption(
         'php-version',
@@ -253,6 +253,7 @@ if (!$success) {
 }
 
 ProjectCreatorHelper::shareComposerToken();
+ProjectCreatorHelper::setPreferredInstall();
 
 // Run composer install
 if (in_array('--no-install', $input->getOption('composer-option'))) {
