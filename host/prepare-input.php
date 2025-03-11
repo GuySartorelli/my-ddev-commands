@@ -3,7 +3,7 @@
 
 ## Usage: prepare-input <input>
 ## Description: Convert markdown list of links into a format ready for use in other commands
-## Flags: [{"Name":"format","Shorthand":"f","Type":"string","Usage":"The format to output. One of 'pr' or 'spaces'","DefValue":"spaces","AutocompleteTerms":["pr","spaces"]}]
+## Flags: [{"Name":"pr","Type":"bool","Usage":"Whether to format the output to be used in the --pr flag of other commands","DefValue":"false"}, {"Name":"no-clipboard","Type":"bool","Usage":"Output instead of copying to clipboard","DefValue":"true"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 
@@ -11,7 +11,9 @@ use GuySartorelli\DdevPhpUtils\Output;
 use GuySartorelli\DdevPhpUtils\Validation;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Process\Process;
 
 // Because of silliness, this could be in either the project's .ddev/.global_commands/host/ or $HOME/.ddev/commands/host/
 $commandsDir = $_SERVER['HOME'] . '/.ddev/commands';
@@ -31,17 +33,22 @@ $definition = new InputDefinition([
         'PR links in markdown list format',
     ),
     new InputOption(
-        'format',
-        'f',
-        InputOption::VALUE_REQUIRED,
-        'The format to output. One of "pr" or "spaces"',
-        'spaces'
+        'pr',
+        null,
+        InputOption::VALUE_NONE,
+        'Whether to format the output to be used in the --pr flag of other commands'
+    ),
+    new InputOption(
+        'clipboard',
+        null,
+        InputOption::VALUE_NEGATABLE,
+        'Whether to copy to clipboard or not',
+        true
     ),
 ]);
 $input = Validation::validate($definition);
 
 $lines = explode(PHP_EOL, trim($input->getArgument('input')));
-$format = $input->getOption('format');
 
 foreach ($lines as &$line) {
     if (!str_starts_with($line, '- ')) {
@@ -50,13 +57,20 @@ foreach ($lines as &$line) {
     $line = ltrim($line, '- ');
 }
 
-switch (strtolower($format)) {
-    case 'pr':
-        Output::step('--pr=' . implode(' --pr=', $lines));
-        break;
-    case 'spaces':
-        Output::step(implode(' ', $lines));
-        break;
-    default:
-        throw new RuntimeException('Format not accepted: ' . $format);
+function outputFormattedValue(string $value, InputInterface $input)
+{
+    if ($input->getOption('clipboard')) {
+        $value = escapeshellarg($value);
+        $x = Process::fromShellCommandline("echo $value | xclip -selection clipboard");
+        $x->setTty(true);
+        $x->mustRun();
+    } else {
+        Output::step($value);
+    }
+}
+
+if ($input->getOption('pr')) {
+    outputFormattedValue('--pr=' . implode(' --pr=', $lines), $input);
+} else {
+    outputFormattedValue(implode(' ', $lines), $input);
 }
