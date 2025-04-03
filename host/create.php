@@ -336,8 +336,6 @@ function setupComposerProject(): bool
     }
     Output::endProgressBar();
 
-    ProjectCreatorHelper::setPreferredInstall();
-
     // Some changes to composer.json
     Output::subStep('Updating composer name and type');
     // Set "type" to "project" to silence warning about not having a version
@@ -352,6 +350,8 @@ function setupComposerProject(): bool
     DDevHelper::run('composer', ['config', 'allow-plugins.phpstan/extension-installer', 'true']);
     // required for linting docs
     DDevHelper::run('composer', ['config', 'allow-plugins.dealerdirect/phpcodesniffer-composer-installer', 'true']);
+
+    ProjectCreatorHelper::setPreferredInstall();
 
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');

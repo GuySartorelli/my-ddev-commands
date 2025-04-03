@@ -35,6 +35,11 @@ final class Output
         return self::$output->isVerbose();
     }
 
+    public static function isVeryVerbose(): bool
+    {
+        return self::$output->isVeryVerbose();
+    }
+
     /**
      * Plain output of a line of text when in debug mode.
      * Doesn't clear progress bars (those are only used in normal verbosity)

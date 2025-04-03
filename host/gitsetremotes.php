@@ -59,6 +59,10 @@ $definition = new InputDefinition([
 ]);
 $input = Validation::validate($definition);
 
+if (!is_dir('.git')) {
+    throw new RuntimeException('No .git/ dir in ' . getcwd());
+}
+
 $gitRepo = new Repository(Path::canonicalize('./'));
 $ccAccount = 'git@github.com:creative-commoners/';
 $securityAccount = 'git@github.com:silverstripe-security/';

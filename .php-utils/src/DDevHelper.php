@@ -24,6 +24,7 @@ final class DDevHelper
     public static function runInteractive(string $command, array $args = []): bool
     {
         $process = new Process(['ddev', $command, ...$args]);
+        Output::debug('Running command `' . $process->getCommandLine() . '`');
         $process->setTimeout(null);
         $process->setTty(true);
         $statusCode = $process->run();
