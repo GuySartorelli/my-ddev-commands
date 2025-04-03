@@ -17,4 +17,10 @@ fi
 
 # Run behat
 behat "$@"
-exit $?
+EXIT_VALUE=$?
+
+# flush because there's a weirdness sometimes
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+$SCRIPT_DIR/flush
+
+exit $EXIT_VALUE
