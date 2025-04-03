@@ -419,8 +419,12 @@ function checkoutPRs(): bool
         Output::subStep('Setting up PR for ' . $composerName);
         Output::subStep('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
 
+
+
         // Try to add dependency if it's not there already
-        $prPath = Path::join($projectRoot, 'vendor', $composerName);
+        $prPath = $details['type'] === 'silverstripe-theme'
+            ? Path::join($projectRoot, 'themes', $details['repo'])
+            : Path::join($projectRoot, 'vendor', $composerName);
         if (!$filesystem->exists($prPath)) {
             // Try composer require-ing it - and if that fails, toss out a warning about it and move on.
             Output::subStep($composerName . ' is not yet added as a dependency - requiring it.');

@@ -12,12 +12,17 @@ final class GitHubService
 {
     private static ?GithubClient $client = null;
 
+    private static array $composerDetails = [];
+
     /**
      * Get the composer.json contents for a GitHub repository from a URL or org/repo formatted string.
      * @throws RuntimeException if the file can't be fetched or is invalid JSON.
      */
-    public static function getComposerJsonForIdentifier(string $repoIdentifier, string $branch = null): \stdClass
+    public static function getComposerJsonForIdentifier(string $repoIdentifier, ?string $branch = null): \stdClass
     {
+        if (array_key_exists($repoIdentifier, self::$composerDetails)) {
+            return self::$composerDetails[$repoIdentifier];
+        }
         $client = self::getClient();
         $parsedIdentifier = self::parseIdentifier($repoIdentifier);
 
@@ -32,6 +37,7 @@ final class GitHubService
             $error = json_last_error_msg();
             throw new RuntimeException("Composer.json wasn't correctly parsed for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: $error");
         }
+        self::$composerDetails[$repoIdentifier] = $json;
         return $json;
     }
 
@@ -44,11 +50,14 @@ final class GitHubService
     {
         $parsed = self::parseIdentifier($repoIdentifier);
         $nameForOutput = "{$parsed['org']}/{$parsed['repo']}";
+        $type = null;
         try {
             $nameForOutput = self::getComposerNameForIdentifier($repoIdentifier);
+            $type = self::getComposerJsonForIdentifier($repoIdentifier)->type ?? null;
         } catch (RuntimeException) {}
         return [
             ...$parsed,
+            'type' => $type,
             'outputName' => $nameForOutput,
             'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
             'pr' => isset($parsed['pr']) ? self::getPRDetails($parsed) : null,
@@ -73,7 +82,9 @@ final class GitHubService
                 // If this is a fork but not a PR, we only need the parsed details and the remote details.
                 if ($allowNonPr) {
                     $remote = "git@github.com:{$parsed['org']}/{$parsed['repo']}.git";
+                    $type = self::getComposerJsonForIdentifier($composerName)->type ?? null;
                     $prs[$composerName] = array_merge($parsed, [
+                        'type' => $type,
                         'remote' => $remote,
                         'remoteName' => self::getNameForRemote($remote),
                     ]);
@@ -130,8 +141,10 @@ final class GitHubService
         $prDetails = $client->pullRequest()->show($parsedIdentifier['org'], $parsedIdentifier['repo'], $parsedIdentifier['pr']);
         $remote = $prDetails['head']['repo']['ssh_url'];
         $remoteName = self::getNameForRemote($remote);
+        $type = self::getComposerJsonForIdentifier("{$parsedIdentifier['org']}/{$parsedIdentifier['repo']}")->type ?? null;
 
         return array_merge($parsedIdentifier, [
+            'type' => $type,
             'from-org' => $prDetails['head']['user']['login'],
             'remote' => $remote,
             'prBranch' => $prDetails['head']['ref'],
