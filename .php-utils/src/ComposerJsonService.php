@@ -64,7 +64,7 @@ class ComposerJsonService
 
         foreach ($forkDetails as $composerName => $fork) {
             // Skip if we don't know what branch we should be targetting
-            if (!isset($fork['prBranch'])) {
+            if (!isset($fork['prBranch']) && !isset($fork['branch'])) {
                 continue;
             }
 
@@ -77,13 +77,17 @@ class ComposerJsonService
             } else {
                 $alias = $this->getCurrentComposerConstraint($composerName, $key);
             }
-            if (!$alias) {
+            if (!$alias && isset($fork['baseBranch'])) {
                 $alias = $parser->normalizeBranch($fork['baseBranch']);
             }
-            if (str_starts_with($alias, '^') || str_starts_with($alias, '!')) {
+            if ($alias && (str_starts_with($alias, '^') || str_starts_with($alias, '!'))) {
                 $alias = $parser->parseConstraints($alias)->getUpperBound()->getVersion();
             }
-            $constraint = $parser->normalizeBranch($fork['prBranch']) . ' as ' . $alias;
+
+            $constraint = $parser->normalizeBranch($fork['prBranch'] ?? $fork['branch']);
+            if ($alias) {
+                $constraint .= ' as ' . $alias;
+            }
 
             // Set dependency and repository info in composer.json
             $json[$key][$composerName] = $constraint;

@@ -104,12 +104,12 @@ final class GitHubService
     }
 
     /**
-     * Parse a URL or github-shorthand repository reference (with optional PR) into an array containing the org, repo, and pr components.
+     * Parse a URL or github-shorthand repository reference (with optional PR or branch) into an array containing the org, repo, and pr or branch components.
      */
     private static function parseIdentifier(string $identifier): array
     {
         $identifier = preg_replace('#^(https?://(www\.)?github\.com/|git@github\.com:)#', '', $identifier);
-        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9._-]*)(?>(?>/pull/|#)(?<pr>[0-9]+))?@', $identifier, $matches)) {
+        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9._-]*)(?>(?>/pull/|#)(?<pr>[0-9]+)|(?>/tree/)(?<branch>[^/\s]+))?@', $identifier, $matches)) {
             throw new InvalidArgumentException("'$identifier' is not a valid GitHub repository reference.");
         }
         if (empty($matches['org']) || empty($matches['repo'])) {

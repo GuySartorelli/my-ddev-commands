@@ -48,7 +48,7 @@ $forkDetails = GitHubService::getPullRequestDetails($forks, true);
 Output::step('Adding fork(s)</>');
 $composerService->addForks($forkDetails);
 
-Output::step('Setting constraints for forked PRs (if any)</>');
+Output::step('Setting constraints for fork(s) if appropriate</>');
 $composerService->addForkedDeps($forkDetails);
 
 Output::success('Added fork(s) successfully.');
