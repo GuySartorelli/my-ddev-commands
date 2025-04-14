@@ -2,6 +2,7 @@
 Name: ddev-extra-graphql-devtools
 Only:
   moduleexists: silverstripe/graphql-devtools
+  classexists: 'SilverStripe\AssetAdmin\GraphQL\Resolvers\AssetAdminResolver'
 ---
 # Only use admin schema, since we don't have any custom ones
 SilverStripe\GraphQLDevTools\Controller:
