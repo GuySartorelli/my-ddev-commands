@@ -60,7 +60,7 @@ final class GitHubService
             'type' => $type,
             'outputName' => $nameForOutput,
             'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
-            'pr' => isset($parsed['pr']) ? self::getPRDetails($parsed) : null,
+            'pr' => !empty($parsed['pr'] ?? null) ? self::getPRDetails($parsed) : null,
         ];
     }
 

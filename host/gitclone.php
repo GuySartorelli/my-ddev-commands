@@ -39,6 +39,7 @@ $definition = new InputDefinition([
 $input = Validation::validate($definition);
 
 $identifiers = $input->getArgument('identifier');
+
 $success = true;
 foreach ($identifiers as $identifier) {
     $repoDetails = GitHubService::getRepositoryDetails($identifier);
