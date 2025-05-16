@@ -169,6 +169,14 @@ final class ProjectCreatorHelper
             $args[] = '--no-audit';
         }
 
+        // `composer install` can't take --prefer-lowest so remove that if it's included.
+        if ($commandType === 'install') {
+            $index = array_search('--prefer-lowest', $args);
+            if ($index !== false) {
+                unset($args[$index]);
+            }
+        }
+
         // Make sure --no-install isn't in there twice.
         return array_unique($args);
     }
