@@ -327,8 +327,8 @@ function setupComposerProject(): bool
     ProjectCreatorHelper::shareComposerToken();
 
     // Run composer command
-    Output::subStep('Running composer create');
-    $args = ProjectCreatorHelper::prepareComposerCommand($input, 'create');
+    Output::subStep('Running composer create-project');
+    $args = ProjectCreatorHelper::prepareComposerCommand($input, 'create-project');
     $success = DDevHelper::runInteractiveOnVerbose('composer', $args);
     if (!$success) {
         Output::error('Couldn\'t create composer project.');
@@ -356,7 +356,7 @@ function setupComposerProject(): bool
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');
     // We need to do this again, because it's only shared for as long as the container is up
-    // and the container gets restarted as part of `ddev composer create` for some reason.
+    // and the container gets restarted as part of `ddev composer create-project` for some reason.
     ProjectCreatorHelper::shareComposerToken();
 
     includeOptionalModule('behat/mink-selenium2-driver', isDev: true);

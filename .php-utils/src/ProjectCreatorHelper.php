@@ -191,7 +191,7 @@ final class ProjectCreatorHelper
             $commandType,
             ...$args
         ];
-        if ($commandType === 'create') {
+        if ($commandType === 'create-project') {
             $command[] = '--no-scripts';
             $command[] = $input->getOption('recipe') . ':' . $input->getOption('constraint');
         }
@@ -199,7 +199,7 @@ final class ProjectCreatorHelper
     }
 
     /**
-     * Copy files to the project. Has to be done AFTER composer create
+     * Copy files to the project. Has to be done AFTER `composer create-project`
      */
     public static function copyProjectFiles(string $commandsDir, string $copyTo, string $projectName, bool $replaceExisting = false): bool
     {
