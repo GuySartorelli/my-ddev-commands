@@ -84,6 +84,11 @@ final class ProjectCreatorHelper
         if (!ProjectCreatorHelper::validateProjName($currentName, !$isCreate)) {
             if (!$isCreate) {
                 Output::warning('The current directory name is not a valid DDEV project name.');
+            } else {
+                Output::warning(
+                    'You must provide an project name. It must be unique and not contain the following characters: '
+                    . DDevHelper::INVALID_PROJECT_NAME_CHARS
+                );
             }
             $currentName = Output::getIO()->ask('Name this project.', $suggestedName, function (string $answer): string {
                 if (!ProjectCreatorHelper::validateProjName($answer)) {
