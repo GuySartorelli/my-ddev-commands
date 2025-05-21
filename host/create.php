@@ -351,7 +351,11 @@ function setupComposerProject(): bool
     // required for linting docs
     DDevHelper::run('composer', ['config', 'allow-plugins.dealerdirect/phpcodesniffer-composer-installer', 'true']);
 
-    ProjectCreatorHelper::setPreferredInstall();
+    if (in_array('--prefer-dist', $input->getOption('composer-option'))) {
+        Output::warning('Using --prefer-dist. Git history will not be available.');
+    } else {
+        ProjectCreatorHelper::setPreferredInstall();
+    }
 
     // Install optional modules as appropriate
     Output::step('Adding additional composer dependencies');

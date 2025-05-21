@@ -253,7 +253,12 @@ if (!$success) {
 }
 
 ProjectCreatorHelper::shareComposerToken();
-ProjectCreatorHelper::setPreferredInstall();
+
+if (in_array('--prefer-dist', $input->getOption('composer-option'))) {
+    Output::warning('Using --prefer-dist. Git history will not be available when installing dependencies.');
+} else {
+    ProjectCreatorHelper::setPreferredInstall();
+}
 
 // Run composer install
 if (in_array('--no-install', $input->getOption('composer-option'))) {
