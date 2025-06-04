@@ -293,6 +293,7 @@ final class ProjectCreatorHelper
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.bringyourownideas/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.colymba/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.cwp/*', 'source']);
+        DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.guysartorelli/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.*/*', 'dist']);
     }
 }
