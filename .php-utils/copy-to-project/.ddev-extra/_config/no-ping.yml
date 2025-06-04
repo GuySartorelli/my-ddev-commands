@@ -1,0 +1,7 @@
+---
+Only:
+  envorconstant:
+    GUY_CMS_PING: "false"
+---
+SilverStripe\Admin\LeftAndMain:
+  session_keepalive_ping: false
