@@ -66,10 +66,16 @@ final class DDevHelper
      *
      * @return mixed The output from the command as JSON output (e.g. stdClass), or null if there was no JSON output.
      */
-    public static function runJson(string $command, array $args = []): mixed
+    public static function runJson(string $command, array $args = [], bool $getRaw = true): mixed
     {
         $response = json_decode(self::run($command, [...$args, '--json-output']), false);
-        return $response->raw ?? null;
+        if ($response === null && json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException('ERROR parsing JSON: ' . json_last_error_msg());
+        }
+        if ($getRaw) {
+            return $response->raw ?? null;
+        }
+        return $response;
     }
 
     /**

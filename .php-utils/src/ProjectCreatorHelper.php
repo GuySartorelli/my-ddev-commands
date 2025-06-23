@@ -113,11 +113,11 @@ final class ProjectCreatorHelper
 
         $dbType = $input->getOption('db');
         $dbVersion = $input->getOption('db-version');
-        if ($dbVersion) {
-            $db = "--database={$dbType}:{$dbVersion}";
-        } else {
-            $db = "--db-image={$dbType}";
+        if (!$dbVersion) {
+            $dbVersion = static::getDbVersion($dbType);
         }
+        Output::debug("Using database {$dbType}:{$dbVersion}");
+        $db = "--database={$dbType}:{$dbVersion}";
 
         $success = DDevHelper::runInteractiveOnVerbose(
             'config',
@@ -295,5 +295,14 @@ final class ProjectCreatorHelper
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.cwp/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.guysartorelli/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.*/*', 'dist']);
+    }
+
+    private static function getDbVersion(string $type): string
+    {
+        $result = DDevHelper::runJson('config', ['--database=invalid'], false);
+        if (!isset($result->msg) || !preg_match_all('/' . preg_quote($type) . ':([0-9]+(?:\.[0-9]+)?)/i', $result->msg, $matches)) {
+            throw new RuntimeException("Cannot get DB version for $type - check if it's valid and if so, add the type yourself.");
+        }
+        return max($matches[1]);
     }
 }
