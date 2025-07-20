@@ -64,6 +64,7 @@ if (!is_dir('.git')) {
 }
 
 $gitRepo = new Repository(Path::canonicalize('./'));
+$ssAccount = 'git@github.com:silverstripe/';
 $ccAccount = 'git@github.com:creative-commoners/';
 $securityAccount = 'git@github.com:silverstripe-security/';
 $prefixAndOrgRegex = '#^(?>git@github\.com:|https://github\.com/).*/#';
@@ -105,6 +106,14 @@ $existingRemotes = $gitRepo->run('remote');
 if (str_contains($existingRemotes, 'composer')) {
     Output::step('Removing composer remote');
     $gitRepo->run('remote', ['remove', 'composer']);
+}
+// Update orig if it was set to cc
+if (str_contains($originUrl, 'creative-commoners/') || str_contains($originUrl, 'silverstripe-security/')) {
+    Output::step('Fixing origin remote');
+    $origRemote = preg_replace($prefixAndOrgRegex, $ssAccount, $originUrl); // @TODO get the correct account for anything not silverstripe (e.g. fluent)
+    $gitRepo->run('remote', ['set-url', $origin, $origRemote]);
+    $gitRepo->run('remote', ['set-url', $origin, $origRemote, '--push']);
+    $gitRepo->run('fetch', [$origin, '--prune']);
 }
 
 // Rename origin
