@@ -197,7 +197,7 @@ function normaliseRecipe(): void
     if (!$versionDetails) {
         $versionCandidates = Semver::satisfiedBy(array_keys($versionDetailsSet), $constraint);
         if (empty($versionCandidates)) {
-            throw new InvalidOptionException("The recipe '$recipe' has no versions compatible with the constraint '$constraint");
+            throw new InvalidOptionException("The recipe '$recipe' has no versions compatible with the constraint '$constraint'");
         }
         $versionDetails = $versionDetailsSet[Semver::rsort($versionCandidates)[0]];
     }
