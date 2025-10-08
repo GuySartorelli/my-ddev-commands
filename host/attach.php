@@ -184,7 +184,7 @@ if (DDevHelper::isInProject()) {
 
 ProjectCreatorHelper::validateOptions($input, null);
 $composerJsonService->validateComposerJsonExists();
-$phpVersion = getPhpVersion();
+$input->setOption('php-version', getPhpVersion());
 $projectName = basename($projectDir);
 $suggestedName = preg_replace('#[' . preg_quote(DDevHelper::INVALID_PROJECT_NAME_CHARS, '#') . ']#', '-', $projectName);
 if (!ProjectCreatorHelper::validateProjName($suggestedName, true)) {
@@ -193,57 +193,6 @@ if (!ProjectCreatorHelper::validateProjName($suggestedName, true)) {
 $projectName = ProjectCreatorHelper::getProjectName($projectName, $suggestedName);
 
 // EXECUTION
-
-/**
- * Spins up an opinionated DDEV project, adds extra extensions, etc
- */
-function setupDdevProject(): bool
-{
-    global $input, $phpVersion, $projectName;
-    Output::step('Spinning up DDEV project');
-
-    $dbType = $input->getOption('db');
-    $dbVersion = $input->getOption('db-version');
-    if ($dbVersion) {
-        $db = "--database={$dbType}:{$dbVersion}";
-    } else {
-        $db = "--db-image={$dbType}";
-    }
-
-    $success = DDevHelper::runInteractiveOnVerbose(
-        'config',
-        [
-            $db,
-            '--webserver-type=apache-fpm',
-            '--webimage-extra-packages=php${DDEV_PHP_VERSION}-tidy',
-            '--project-type=php',
-            '--php-version=' . $phpVersion,
-            '--project-name=' . $projectName,
-            '--timezone=Pacific/Auckland',
-            '--docroot=public',
-            '--create-docroot',
-        ]
-    );
-    if (!$success) {
-        Output::error('Failed to set up DDEV project.');
-        return false;
-    }
-
-    $hasBehat = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-selenium-standalone-chrome']);
-    if (!$hasBehat) {
-        Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-selenium-standalone-chrome</> - add that manually.');
-    }
-
-    $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-adminer']);
-    if (!$hasDbAdmin) {
-        Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
-    }
-
-    DDevHelper::runInteractiveOnVerbose('start', []);
-
-    Output::endProgressBar();
-    return true;
-}
 
 // DDEV config
 $success = ProjectCreatorHelper::setupDdevProject($input, $projectName);
@@ -317,12 +266,7 @@ if (!$success) {
 if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::warning('--no-install passed to composer-option, cannot build database.');
 } else {
-    Output::step('Building database');
-    $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
-    if (!$success) {
-        Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
-    }
-    Output::endProgressBar();
+    ProjectCreatorHelper::devBuild();
 }
 
 $details = DDevHelper::getProjectDetails();

@@ -321,7 +321,7 @@ function includeOptionalModule(string $moduleName, bool $shouldInclude = true, b
  */
 function setupComposerProject(): bool
 {
-    global $input, $projectName;
+    global $input, $projectName, $projectRoot;
     Output::step('Creating composer project');
 
     ProjectCreatorHelper::shareComposerToken();
@@ -518,17 +518,12 @@ if (!$success) {
 
 // Build database
 if ($input->getOption('no-build')) {
-    Output::warning("Skipping database build - run <options=bold>ddev exec sake dev/build</>");
+    Output::warning("Skipping database build - run <options=bold>ddev exec sake db:build</>");
 } else {
     if (in_array('--no-install', $input->getOption('composer-option'))) {
         Output::warning('--no-install passed to composer-option, cannot build database.');
     } else {
-        Output::step('Building database');
-        $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build']);
-        if (!$success) {
-            Output::warning("Couldn't build database - run <options=bold>ddev exec sake dev/build</>");
-        }
-        Output::endProgressBar();
+        ProjectCreatorHelper::devBuild();
     }
 }
 

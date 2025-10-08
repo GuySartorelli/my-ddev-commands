@@ -2,6 +2,7 @@
 
 namespace GuySartorelli\DdevPhpUtils;
 
+use Composer\Semver\VersionParser;
 use RecursiveDirectoryIterator;
 use RuntimeException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
@@ -290,6 +291,41 @@ final class ProjectCreatorHelper
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.cwp/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.guysartorelli/*', 'source']);
         DDevHelper::runInteractiveOnVerbose('composer', ['config', 'preferred-install.*/*', 'dist']);
+    }
+
+    public static function devBuild(): void
+    {
+        $buildCommand = static::getCmsMajor() > 5 ? 'db:build' : 'dev/build';
+        Output::step('Building database');
+        $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', $buildCommand]);
+        if (!$success) {
+            Output::warning("Couldn't build database - run <options=bold>ddev exec sake {$buildCommand}</>");
+        }
+        Output::endProgressBar();
+
+    }
+
+    private static function getCmsMajor(): int
+    {
+        $composer = new ComposerJsonService('');
+        $versionParser = new VersionParser();
+        foreach ([
+            'silverstripe/recipe-cms',
+            'silverstripe/recipe-core',
+            'silverstripe/cms',
+            'silverstripe/framework',
+        ] as $dep) {
+            $constraint = $composer->getCurrentComposerConstraint($dep);
+            if (!$constraint) {
+                continue;
+            }
+            if ($constraint && (str_starts_with($constraint, '^') || str_starts_with($constraint, '~'))) {
+                $version = $versionParser->parseConstraints($constraint)->getUpperBound()->getVersion();
+                $versionParts = explode('.', $version);
+                return (int) $versionParts[0];
+            }
+        }
+        return -1;
     }
 
     private static function getDbVersion(string $type): string
