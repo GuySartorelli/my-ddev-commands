@@ -229,7 +229,7 @@ final class ProjectCreatorHelper
 
     private static function createAppNameConfig(string $copyTo, string $projectName): bool
     {
-        Output::subStep('Creating config file to adjust application name');
+        Output::debug('Creating config file to adjust application name');
         $filesystem = new Filesystem();
         $configDir = Path::join($copyTo, '.ddev-extra', '_config');
 

@@ -42,10 +42,13 @@ final class Output
 
     /**
      * Plain output of a line of text when in debug mode.
-     * Doesn't clear progress bars (those are only used in normal verbosity)
+     * If we're not in debug mode and there's a progress bar, outputs the message there instead.
      */
     public static function debug(string $message): void
     {
+        if (!self::$output->isDebug() && self::$progressBar !== null) {
+            self::advanceProgressBar($message);
+        }
         self::$output->writeln($message, ConsoleOutput::VERBOSITY_DEBUG);
     }
 
@@ -172,6 +175,7 @@ final class Output
             self::$progressBar->finish();
             self::$progressBar->clear();
             self::$progressBar = null;
+            self::$progressBarDisplayed = false;
         }
     }
 }
