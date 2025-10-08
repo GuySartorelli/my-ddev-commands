@@ -363,8 +363,6 @@ function setupComposerProject(): bool
     // and the container gets restarted as part of `ddev composer create-project` for some reason.
     ProjectCreatorHelper::shareComposerToken();
 
-    includeOptionalModule('behat/mink-selenium2-driver', isDev: true);
-    includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
     includeOptionalModule('silverstripe/recipe-testing', (bool) $input->getOption('include-recipe-testing'), isDev: true);
     // for linting
@@ -505,6 +503,14 @@ if (!empty($prs) && !$input->getOption('pr-has-deps')) {
 }
 
 $success = ProjectCreatorHelper::copyProjectFiles($commandsDir, $projectRoot, $projectName, true);
+if (!$success) {
+    // @TODO rollback?
+    exit(1);
+}
+
+// Copying files includes changes to the DDEV project, so we need to restart.
+Output::step('Restarting DDEV project with updated config');
+$success = DDevHelper::runInteractiveOnVerbose('restart');
 if (!$success) {
     // @TODO rollback?
     exit(1);

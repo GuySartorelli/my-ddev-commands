@@ -15,8 +15,14 @@ if [[ $* != *--tags* ]]; then
     set -- "--tags=gsat" "$@"
 fi
 
-# Run behat
-behat "$@"
+echo 'Killing any old chromedriver instances';
+DRIVER_PID=$(pgrep chromedriver)
+if [ -n "$DRIVER_PID" ]; then
+    kill -15 $DRIVER_PID > /dev/null
+fi
+
+# Run chromedriver and behat
+$(chromedriver --log-path=.ddev-extra/artifacts/chromedriver.log --log-level=INFO > /dev/null 2>&1 &) && behat "$@"
 EXIT_VALUE=$?
 
 # flush because there's a weirdness sometimes

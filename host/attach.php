@@ -305,6 +305,14 @@ if (!$success) {
     exit(1);
 }
 
+// Copying files includes changes to the DDEV project, so we need to restart.
+Output::step('Restarting DDEV project with updated config');
+$success = DDevHelper::runInteractiveOnVerbose('restart');
+if (!$success) {
+    // @TODO rollback?
+    exit(1);
+}
+
 // Build database
 if (in_array('--no-install', $input->getOption('composer-option'))) {
     Output::warning('--no-install passed to composer-option, cannot build database.');
