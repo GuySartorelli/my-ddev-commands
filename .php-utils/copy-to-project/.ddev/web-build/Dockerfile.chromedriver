@@ -1,0 +1,15 @@
+# The requirements from libnss3-dev onwards are for chrome-testing to run properly
+RUN apt-get update && apt-get install -y wget unzip libnss3-dev libgdk-pixbuf2.0-dev libgtk-3-dev libxss-dev libasound2
+# Get last known version of chrome + chromedriver that doesn't differ from actual user experience
+# See https://github.com/silverstripe/gha-ci/issues/141
+# Install chrome and chromedriver then output their versions
+# No version checking here but I'll need to add it if/when we move off version 126
+RUN wget https://storage.googleapis.com/chrome-for-testing-public/126.0.6478.182/linux64/chrome-linux64.zip \
+    && unzip chrome-linux64.zip \
+    && ln -s /chrome-linux64/chrome /usr/bin/chrome \
+    && wget https://storage.googleapis.com/chrome-for-testing-public/126.0.6478.182/linux64/chromedriver-linux64.zip \
+    && unzip chromedriver-linux64.zip \
+    && ln -s /chromedriver-linux64/chromedriver /usr/bin/chromedriver \
+    && echo "Chrome version is: $(chrome --version)" \
+    && echo "Chromedriver version is: $(chromedriver --version)" \
+    && rm chrome-linux64.zip chromedriver-linux64.zip
