@@ -80,7 +80,7 @@ class ComposerJsonService
             if (!$alias && isset($fork['baseBranch'])) {
                 $alias = $parser->normalizeBranch($fork['baseBranch']);
             }
-            if ($alias && (str_starts_with($alias, '^') || str_starts_with($alias, '!'))) {
+            if ($alias && (str_starts_with($alias, '^') || str_starts_with($alias, '~'))) {
                 $alias = $parser->parseConstraints($alias)->getUpperBound()->getVersion();
             }
 
