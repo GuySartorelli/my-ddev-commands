@@ -63,6 +63,7 @@ if ! [ -f "vendor/bin/doclint" ]; then
 fi
 
 echo "Linting docs in $MODULE_DIR"
+nvm install 18 # hack for now
 vendor/bin/doclint $MODULE_DIR $FLAGS
 if [ $? -ne 0 ]; then
     exit 1
