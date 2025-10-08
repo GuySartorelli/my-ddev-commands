@@ -100,6 +100,9 @@ class ComposerJsonService
     {
         $json = $this->getComposerJson();
 
+        if ($dependency === 'php' && isset($json['config']['platform']['php'])) {
+            return $json['config']['platform']['php'];
+        }
         if (!isset($json[$key][$dependency])) {
             return null;
         }
