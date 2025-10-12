@@ -120,6 +120,7 @@ final class ProjectCreatorHelper
         Output::debug("Using database {$dbType}:{$dbVersion}");
         $db = "--database={$dbType}:{$dbVersion}";
 
+        Output::subStep('Running ddev config');
         $success = DDevHelper::runInteractiveOnVerbose(
             'config',
             [
@@ -140,12 +141,14 @@ final class ProjectCreatorHelper
             return false;
         }
 
+        Output::subStep('Adding adminer add-on');
         $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-adminer']);
         if (!$hasDbAdmin) {
             Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
         }
 
         // Copy .ddev files to project
+        Output::subStep('Copying custom .ddev/ files to project');
         try {
             // Copy files through (config, .env, etc)
             $filesystem = new Filesystem();
@@ -161,6 +164,7 @@ final class ProjectCreatorHelper
             return false;
         }
 
+        Output::subStep('Starting DDEV project containers');
         DDevHelper::runInteractiveOnVerbose('start', []);
 
         Output::endProgressBar();

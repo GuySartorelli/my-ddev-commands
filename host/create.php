@@ -419,7 +419,7 @@ function checkoutPRs(): bool
     $success = true;
     foreach ($prs as $composerName => $details) {
         Output::subStep('Setting up PR for ' . $composerName);
-        Output::subStep('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
+        Output::debug('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
 
 
 
@@ -429,7 +429,7 @@ function checkoutPRs(): bool
             : Path::join($projectRoot, 'vendor', $composerName);
         if (!$filesystem->exists($prPath)) {
             // Try composer require-ing it - and if that fails, toss out a warning about it and move on.
-            Output::subStep($composerName . ' is not yet added as a dependency - requiring it.');
+            Output::debug($composerName . ' is not yet added as a dependency - requiring it.');
             $checkoutSuccess = DDevHelper::runInteractiveOnVerbose('composer', ['require', $composerName]);
             if (!$checkoutSuccess) {
                 failCheckout($composerName, $success);
