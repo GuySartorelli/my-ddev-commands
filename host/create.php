@@ -461,7 +461,7 @@ if (!$success) {
 chdir($projectRoot);
 
 // DDEV config
-$success = ProjectCreatorHelper::setupDdevProject($input, $projectName);
+$success = ProjectCreatorHelper::setupDdevProject($input, $projectName, $commandsDir, $projectRoot);
 if (!$success) {
     // @TODO rollback
     exit(1);
@@ -503,14 +503,6 @@ if (!empty($prs) && !$input->getOption('pr-has-deps')) {
 }
 
 $success = ProjectCreatorHelper::copyProjectFiles($commandsDir, $projectRoot, $projectName, true);
-if (!$success) {
-    // @TODO rollback?
-    exit(1);
-}
-
-// Copying files includes changes to the DDEV project, so we need to restart.
-Output::step('Restarting DDEV project with updated config');
-$success = DDevHelper::runInteractiveOnVerbose('restart');
 if (!$success) {
     // @TODO rollback?
     exit(1);

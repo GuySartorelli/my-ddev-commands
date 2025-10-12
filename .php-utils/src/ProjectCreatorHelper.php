@@ -108,7 +108,7 @@ final class ProjectCreatorHelper
     /**
      * Spins up an opinionated DDEV project, adds extra extensions, etc
      */
-    public static function setupDdevProject(InputInterface $input, string $projectName): bool
+    public static function setupDdevProject(InputInterface $input, string $projectName, $commandsDir, $copyTo): bool
     {
         Output::step('Spinning up DDEV project');
 
@@ -143,6 +143,22 @@ final class ProjectCreatorHelper
         $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('add-on', ['get', 'ddev/ddev-adminer']);
         if (!$hasDbAdmin) {
             Output::warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
+        }
+
+        // Copy .ddev files to project
+        try {
+            // Copy files through (config, .env, etc)
+            $filesystem = new Filesystem();
+            $filesystem->mirror(
+                Path::join($commandsDir, '.php-utils', 'copy-to-project', '.ddev'),
+                Path::join($copyTo, '.ddev'),
+                options: ['override' => true]
+            );
+        } catch (IOExceptionInterface $e) {
+            // @TODO replace this with more standardised error/failure handling.
+            Output::error("Couldn't copy .ddev/ files: {$e->getMessage()}");
+            Output::debug($e->getTraceAsString());
+            return false;
         }
 
         DDevHelper::runInteractiveOnVerbose('start', []);
@@ -208,6 +224,7 @@ final class ProjectCreatorHelper
         try {
             // Copy files through (config, .env, etc)
             $filesystem = new Filesystem();
+            // @TODO eventually I should pass in an iterator to the mirror() method to not re-copy .ddev/ stuff
             $filesystem->mirror(
                 Path::join($commandsDir, '.php-utils', 'copy-to-project'),
                 $copyTo,

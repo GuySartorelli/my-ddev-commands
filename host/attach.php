@@ -195,7 +195,7 @@ $projectName = ProjectCreatorHelper::getProjectName($projectName, $suggestedName
 // EXECUTION
 
 // DDEV config
-$success = ProjectCreatorHelper::setupDdevProject($input, $projectName);
+$success = ProjectCreatorHelper::setupDdevProject($input, $projectName, $commandsDir, './');
 if (!$success) {
     // @TODO rollback
     exit(1);
@@ -249,14 +249,6 @@ if (file_exists('.env')) {
 }
 
 $success = ProjectCreatorHelper::copyProjectFiles($commandsDir, './', $projectName, false);
-if (!$success) {
-    // @TODO rollback?
-    exit(1);
-}
-
-// Copying files includes changes to the DDEV project, so we need to restart.
-Output::step('Restarting DDEV project with updated config');
-$success = DDevHelper::runInteractiveOnVerbose('restart');
 if (!$success) {
     // @TODO rollback?
     exit(1);
