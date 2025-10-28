@@ -76,13 +76,14 @@ final class GitHubService
         $prs = [];
         foreach ($rawPRs as $rawPR) {
             $parsed = self::parseIdentifier($rawPR);
+            $repoIdentifier = "{$parsed['org']}/{$parsed['repo']}";
             $composerName = self::getComposerNameForIdentifier($rawPR);
 
             if (empty($parsed['pr'])) {
                 // If this is a fork but not a PR, we only need the parsed details and the remote details.
                 if ($allowNonPr) {
                     $remote = "git@github.com:{$parsed['org']}/{$parsed['repo']}.git";
-                    $type = self::getComposerJsonForIdentifier($composerName)->type ?? null;
+                    $type = self::getComposerJsonForIdentifier($repoIdentifier)->type ?? null;
                     $prs[$composerName] = array_merge($parsed, [
                         'type' => $type,
                         'remote' => $remote,

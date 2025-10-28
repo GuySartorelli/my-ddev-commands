@@ -150,7 +150,6 @@ final class ProjectCreatorHelper
         // Copy .ddev files to project
         Output::subStep('Copying custom .ddev/ files to project');
         try {
-            // Copy files through (config, .env, etc)
             $filesystem = new Filesystem();
             $filesystem->mirror(
                 Path::join($commandsDir, '.php-utils', 'copy-to-project', '.ddev'),
@@ -334,6 +333,7 @@ final class ProjectCreatorHelper
             'silverstripe/recipe-cms',
             'silverstripe/recipe-core',
             'silverstripe/cms',
+            'silverstripe/admin',
             'silverstripe/framework',
         ] as $dep) {
             $constraint = $composer->getCurrentComposerConstraint($dep);

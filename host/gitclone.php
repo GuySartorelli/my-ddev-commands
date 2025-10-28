@@ -67,6 +67,16 @@ foreach ($identifiers as $identifier) {
             Output::error("Could not check out PR branch <options=bold>{$details['prBranch']}</> - please check it out manually.");
             $success = false;
         }
+    } elseif (isset($repoDetails['branch'])) {
+        $branch = $repoDetails['branch'];
+        Output::subStep('Checking out branch ' . $branch);
+        try {
+            $gitRepo = new Repository($repoPath);
+            $gitRepo->run('switch', [$branch]);
+        } catch (ProcessException $e) {
+            Output::error("Could not check out branch <options=bold>{$branch}</> - please check it out manually.");
+            $success = false;
+        }
     }
 
     if ($success) {
