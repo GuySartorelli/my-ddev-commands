@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 final class Validation
@@ -30,7 +31,7 @@ final class Validation
         ));
         $input = new ArgvInput();
 
-        Output::init($input->hasParameterOption(['--verbose', '-v', '-vv', '-vvv'], true));
+        Output::init(self::getVerbosity($input));
 
         set_exception_handler([self::class, 'handleException']);
 
@@ -38,6 +39,21 @@ final class Validation
         $input->validate();
 
         return $input;
+    }
+
+    private static function getVerbosity(InputInterface $input): int
+    {
+        // These conditions come straight from Symfony's Application::configureIO()
+        if ($input->hasParameterOption('-vvv', true) || $input->hasParameterOption('--verbose=3', true) || 3 === $input->getParameterOption('--verbose', false, true)) {
+            return OutputInterface::VERBOSITY_DEBUG;
+        }
+        if ($input->hasParameterOption('-vv', true) || $input->hasParameterOption('--verbose=2', true) || 2 === $input->getParameterOption('--verbose', false, true)) {
+            return OutputInterface::VERBOSITY_VERY_VERBOSE;
+        }
+        if ($input->hasParameterOption('-v', true) || $input->hasParameterOption('--verbose=1', true) || $input->hasParameterOption('--verbose', true) || $input->getParameterOption('--verbose', false, true)) {
+            return OutputInterface::VERBOSITY_VERBOSE;
+        }
+        return OutputInterface::VERBOSITY_NORMAL;
     }
 
     /**

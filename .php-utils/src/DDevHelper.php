@@ -32,14 +32,14 @@ final class DDevHelper
     }
 
     /**
-     * Run a DDEV command interactively (assumes TTY is supported) when output is verbose - but otherwise run it normally.
+     * Run a DDEV command interactively (assumes TTY is supported) when output is very verbose - but otherwise run it normally.
      * Takes an optional callback to handle output when not running interactively.
      *
      * @return bool Whether the command was successful or not
      */
     public static function runInteractiveOnVerbose(string $command, array $args = []): bool
     {
-        if (Output::isVerbose()) {
+        if (Output::isVeryVerbose()) {
             return self::runInteractive($command, $args);
         }
 

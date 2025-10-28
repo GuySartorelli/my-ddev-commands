@@ -19,9 +19,8 @@ final class Output
 
     private static bool $progressBarDisplayed = false;
 
-    public static function init(bool $verbose): void
+    public static function init(int $verbosity): void
     {
-        $verbosity = $verbose ? ConsoleOutput::VERBOSITY_DEBUG : ConsoleOutput::VERBOSITY_NORMAL;
         self::$output = new SymfonyStyle(new ArrayInput([]), new ConsoleOutput(verbosity: $verbosity));
     }
 
@@ -41,12 +40,12 @@ final class Output
     }
 
     /**
-     * Plain output of a line of text when in debug mode.
-     * If we're not in debug mode and there's a progress bar, outputs the message there instead.
+     * Plain output of a line of text when in (very verbose) mode.
+     * If we're not in (very verbose) mode and there's a progress bar, outputs the message there instead.
      */
     public static function debug(string $message): void
     {
-        if (!self::$output->isDebug() && self::$progressBar !== null) {
+        if (!self::$output->isVeryVerbose() && self::$progressBar !== null) {
             self::advanceProgressBar($message);
         }
         self::$output->writeln($message, ConsoleOutput::VERBOSITY_DEBUG);
@@ -65,12 +64,17 @@ final class Output
 
     /**
      * Nice standardised output style for outputting sub-step information.
-     * Also clears any progress bars in progress.
+     * In verbose mode, clears any progress bars in progress.
+     * In standard mode, will add message to progress bar, or otherwise silent.
      */
-    public static function subStep(string $output): void
+    public static function subStep(string $message): void
     {
-        self::clearProgressBar();
-        self::$output->writeln('<fg=gray>' . $output . self::STYLE_END);
+        if (self::$output->isVerbose()) {
+            self::clearProgressBar();
+            self::$output->writeln('<fg=gray>' . $message . self::STYLE_END);
+        } else if (self::$progressBar !== null) {
+            self::advanceProgressBar($message);
+        }
     }
 
     /**
