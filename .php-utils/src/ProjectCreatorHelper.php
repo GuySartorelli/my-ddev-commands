@@ -2,7 +2,6 @@
 
 namespace GuySartorelli\DdevPhpUtils;
 
-use Composer\Semver\VersionParser;
 use RecursiveDirectoryIterator;
 use RuntimeException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
@@ -315,8 +314,12 @@ final class ProjectCreatorHelper
 
     public static function devBuild(): void
     {
-        $buildCommand = static::getCmsMajor() > 5 ? 'db:build' : 'dev/build';
         Output::step('Building database');
+        $cmsMajor = static::getCmsMajor();
+        if ($cmsMajor === -1) {
+            Output::warning('CMS Major could not be determined! Falling back to CMS 5 mode');
+        }
+        $buildCommand = $cmsMajor > 5 ? 'db:build' : 'dev/build';
         $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', $buildCommand]);
         if (!$success) {
             Output::warning("Couldn't build database - run <options=bold>ddev exec sake {$buildCommand}</>");
@@ -327,25 +330,22 @@ final class ProjectCreatorHelper
 
     private static function getCmsMajor(): int
     {
-        $composer = new ComposerJsonService('');
-        $versionParser = new VersionParser();
-        foreach ([
-            'silverstripe/recipe-cms',
-            'silverstripe/recipe-core',
-            'silverstripe/cms',
-            'silverstripe/admin',
-            'silverstripe/framework',
-        ] as $dep) {
-            $constraint = $composer->getCurrentComposerConstraint($dep);
-            if (!$constraint) {
+        // @TODO consider using `composer show silverstripe/framework --format=json` instead
+        $result = DDevHelper::run('composer', ['show', 'silverstripe/framework', '--format=json']);
+        $json = json_decode($result, true);
+        if (!$json || !array_key_exists('versions', $json)) {
+            // @TODO consider error handling
+            return -1;
+        }
+        foreach ($json['versions'] as $version) {
+            // e.g. 6.1.0, 6.1.x-dev, 6.x-dev
+            if (!preg_match('/^[0-9]+\./', $version)) {
                 continue;
             }
-            if ($constraint && (str_starts_with($constraint, '^') || str_starts_with($constraint, '~'))) {
-                $version = $versionParser->parseConstraints($constraint)->getUpperBound()->getVersion();
-                $versionParts = explode('.', $version);
-                return (int) $versionParts[0];
-            }
+            $versionParts = explode('.', $version);
+            return (int) $versionParts[0];
         }
+        // @TODO consider error handling
         return -1;
     }
 
