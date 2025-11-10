@@ -12,6 +12,7 @@ use GuySartorelli\DdevPhpUtils\Output;
 use GuySartorelli\DdevPhpUtils\Validation;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -65,10 +66,31 @@ if (count($missing) !== 0) {
 
 // Execution
 $numSucceeded = 0;
+$numSkipped = 0;
 foreach ($projectNames as $projectName) {
+    $successSwap = chdir($projectRoot[$projectName]);
+
+    // Check if there were changes in the project before destroying it, so I don't delete work in progress.
+    $changes = DDevHelper::run('changes');
+    if ($changes !== 'no changes') {
+        $question = new ChoiceQuestion("<options=bold>$projectName</> has changes. Do you want to continue?", ['y', 'n', '?']);
+        $question->setErrorMessage('Choose [y]es, [n]o, or [?] to see which modules have changes.');
+        $result = '?';
+        while ($result === '?') {
+            $result = Output::getIO()->askQuestion($question);
+            if ($result === '?') {
+                Output::getIO()->writeln($changes);
+            }
+        }
+        if ($result !== 'y') {
+            Output::step("Skipping project <options=bold>$projectName</> - result was '$result'");
+            $numSkipped++;
+            continue;
+        }
+    }
+
     Output::step("Destroying project <options=bold>$projectName</>");
 
-    $successSwap = chdir($projectRoot[$projectName]);
     if (!$successSwap) {
         Output::error('Could not swap to DDEV project.');
         continue;
@@ -95,7 +117,7 @@ foreach ($projectNames as $projectName) {
     Output::step("Project {$projectName} successfully destroyed");
 }
 
-$numFailed = count($projectNames) - $numSucceeded;
+$numFailed = count($projectNames) - ($numSkipped + $numSucceeded);
 if ($numFailed !== 0) {
     Output::error("Failed to destroy <options=bold>{$numFailed}</> projects");
     exit(1);
