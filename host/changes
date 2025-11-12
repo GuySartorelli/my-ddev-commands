@@ -5,50 +5,78 @@
 ## Example: "ddev changes"
 ## ExecRaw: false
 
-# Let this work from anywhere
-cd "${DDEV_APPROOT}"
+has_changes=0
 
-# Check vendor/ first
-for D in `find 'vendor' -mindepth 2 -maxdepth 2 -type d`; do
-    # For some reason `cd "${D}"` doesn't work so use full path
-    cd "${DDEV_APPROOT}/${D}"
+# function that checks for uncommitted or unpushed changes
+check_for_changes () {
+    dir=$1
+
+    # For some reason `cd "${dir}"` doesn't work so use full path
+    cd "${DDEV_APPROOT}/${dir}"
     # Skip if missing .git dir
     if ! [[ -d '.git' ]]; then
-        continue
-    fi
-    # Skip this repo because it's always changed by composer install
-    if [[ "${D}" =~ /phpstan/extension-installer$ ]]; then
-        continue
+        cd - >/dev/null
+        return
     fi
 
     # Check git status - if not "nothing to commit", echo it.
     git_status=$(git status)
     if ! [[ "$git_status" =~ "nothing to commit, working tree clean" ]]; then
         has_changes=1
-        echo "${D}"
+        echo "${dir} (not committed)"
     fi
+
+    # Check for committed but not pushed changes
+    isPushed=0
+    remotes=$(git remote show)
+    branch=$(git branch --show-current)
+
+    # If there's no branch, we're probably on a tag.
+    if [[ $branch == '' ]]; then
+        cd - >/dev/null
+        return
+    fi
+
+    while IFS= read -r line || [[ -n $line ]]; do
+        if [[ $line == 'composer' ]]; then
+            # ddev remotes removes this remote so arguably we should halt and say "you don't even have your remotes set"
+            # but for now just skip it
+            continue
+        fi
+
+        # If the command exited 0 (i.e. branch exists on that remote) and was empty, there's no diff
+        # That means it was pushed to that remote.
+        diff=$(git diff "$line/$branch" 2>/dev/null)
+        if [[ $? == 0 && $diff == '' ]]; then
+            isPushed=1
+            break
+        fi
+    done < <(printf '%s' "$remotes")
+
+    if [[ $isPushed == 0 ]]; then
+        has_changes=1
+        echo "${dir} (not pushed)"
+    fi
+
     cd - >/dev/null
+}
+
+# Check vendor/ first
+cd "${DDEV_APPROOT}"
+for D in `find 'vendor' -mindepth 2 -maxdepth 2 -type d`; do
+    # Skip this repo because it's always changed by composer install
+    if [[ "${D}" =~ /phpstan/extension-installer$ ]]; then
+        continue
+    fi
+    check_for_changes $D
 done
 
 # Check themes
 cd "${DDEV_APPROOT}"
 for D in `find 'themes' -mindepth 1 -maxdepth 1 -type d`; do
-    # For some reason `cd "${D}"` doesn't work so use full path
-    cd "${DDEV_APPROOT}/${D}"
-    # Skip if missing .git dir
-    if ! [[ -d '.git' ]]; then
-        continue
-    fi
-
-    # Check git status - if not "nothing to commit", echo it.
-    git_status=$(git status)
-    if ! [[ "$git_status" =~ "nothing to commit, working tree clean" ]]; then
-        has_changes=1
-        echo "${D}"
-    fi
-    cd - >/dev/null
+    check_for_changes $D
 done
 
-if [[ -z $has_changes ]]; then
+if [[ $has_changes == 0 ]]; then
     echo "no changes"
 fi
