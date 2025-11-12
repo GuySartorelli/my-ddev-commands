@@ -72,7 +72,7 @@ foreach ($projectNames as $projectName) {
 
     // Check if there were changes in the project before destroying it, so I don't delete work in progress.
     $changes = DDevHelper::run('changes');
-    if ($changes !== 'no changes') {
+    if (trim($changes) !== 'no changes') {
         $question = new ChoiceQuestion("<options=bold>$projectName</> has changes. Do you want to continue?", ['y', 'n', '?']);
         $question->setErrorMessage('Choose [y]es, [n]o, or [?] to see which modules have changes.');
         $result = '?';
