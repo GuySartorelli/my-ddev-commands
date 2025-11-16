@@ -46,7 +46,7 @@ check_for_changes () {
 
         # If the command exited 0 (i.e. branch exists on that remote) and was empty, there's no diff
         # That means it was pushed to that remote.
-        diff=$(git diff "$line/$branch" 2>/dev/null)
+        diff=$(git diff "$line/$branch" "$branch" 2>/dev/null)
         if [[ $? == 0 && $diff == '' ]]; then
             isPushed=1
             break
