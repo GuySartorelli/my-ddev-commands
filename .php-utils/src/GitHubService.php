@@ -29,7 +29,7 @@ final class GitHubService
         try {
             $composerJson = $client->repo()->contents()->download($parsedIdentifier['org'], $parsedIdentifier['repo'], 'composer.json', $branch);
         } catch (GitHubRuntimeException $e) {
-            throw new RuntimeException("Couldn't find composer.json for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
+            throw new GitHubRuntimeException("Couldn't find composer.json for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
         }
 
         $json = json_decode($composerJson, false);
@@ -54,7 +54,7 @@ final class GitHubService
         try {
             $nameForOutput = self::getComposerNameForIdentifier($repoIdentifier);
             $type = self::getComposerJsonForIdentifier($repoIdentifier)->type ?? null;
-        } catch (RuntimeException) {}
+        } catch (GitHubRuntimeException) {}
         return [
             ...$parsed,
             'type' => $type,
@@ -142,7 +142,11 @@ final class GitHubService
         $prDetails = $client->pullRequest()->show($parsedIdentifier['org'], $parsedIdentifier['repo'], $parsedIdentifier['pr']);
         $remote = $prDetails['head']['repo']['ssh_url'];
         $remoteName = self::getNameForRemote($remote);
-        $type = self::getComposerJsonForIdentifier("{$parsedIdentifier['org']}/{$parsedIdentifier['repo']}")->type ?? null;
+        try {
+            $type = self::getComposerJsonForIdentifier("{$parsedIdentifier['org']}/{$parsedIdentifier['repo']}")->type ?? null;
+        } catch (GitHubRuntimeException) {
+            $type = null;
+        }
 
         return array_merge($parsedIdentifier, [
             'type' => $type,
