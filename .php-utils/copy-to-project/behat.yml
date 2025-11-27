@@ -13,6 +13,9 @@ default:
       facebook_web_driver:
         browser: chrome
         wd_host: http://localhost:9515
+        # timeouts:
+        #   script: 300000
+        #   page: 300000
         capabilities:
           extra_capabilities:
             chromeOptions:
