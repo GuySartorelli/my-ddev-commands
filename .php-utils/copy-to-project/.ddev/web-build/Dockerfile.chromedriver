@@ -1,5 +1,5 @@
 # The requirements from libnss3-dev onwards are for chrome-testing to run properly
-RUN apt-get update && apt-get install -y wget unzip libnss3-dev libgdk-pixbuf2.0-dev libgtk-3-dev libxss-dev libasound2
+RUN apt-get update && apt-get install -y wget unzip libnss3-dev libgdk-pixbuf-xlib-2.0-dev libgtk-3-dev libxss-dev libasound2
 # Get last known version of chrome + chromedriver that doesn't differ from actual user experience
 # See https://github.com/silverstripe/gha-ci/issues/141
 # Install chrome and chromedriver then output their versions
