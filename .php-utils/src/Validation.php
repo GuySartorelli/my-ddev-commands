@@ -105,5 +105,7 @@ final class Validation
                 Output::getIO()->writeln('');
             }
         }
+
+        exit(1);
     }
 }

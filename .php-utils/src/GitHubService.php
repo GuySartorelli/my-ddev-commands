@@ -54,7 +54,7 @@ final class GitHubService
         try {
             $nameForOutput = self::getComposerNameForIdentifier($repoIdentifier);
             $type = self::getComposerJsonForIdentifier($repoIdentifier)->type ?? null;
-        } catch (GitHubRuntimeException) {}
+        } catch (GitHubRuntimeException|RuntimeException) {}
         return [
             ...$parsed,
             'type' => $type,

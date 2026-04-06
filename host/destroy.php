@@ -36,10 +36,10 @@ $definition = new InputDefinition([
 ]);
 $input = Validation::validate($definition);
 
-// Validation
+// Validation (though the validator above should catch it)
 $projectNames = $input->getArgument('project-names');
 if (empty($projectNames)) {
-    return;
+    exit(1);
 }
 // Technically it shouldn't ever be included in the JSON output of `ddev list` anyway,
 // but in case that ever changes, explicitly don't allow destroying the Router.
