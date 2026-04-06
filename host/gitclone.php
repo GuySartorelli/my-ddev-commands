@@ -41,6 +41,7 @@ $input = Validation::validate($definition);
 $identifiers = $input->getArgument('identifier');
 
 $success = true;
+// @TODO gotta add progress bars, especially for checking out branches. It takes so fucking long.
 foreach ($identifiers as $identifier) {
     $repoDetails = GitHubService::getRepositoryDetails($identifier);
 

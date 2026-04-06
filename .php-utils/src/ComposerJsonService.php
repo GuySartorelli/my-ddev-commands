@@ -47,6 +47,7 @@ class ComposerJsonService
     {
         $json = $this->getComposerJson();
 
+        // composer config repositories.foo vcs remoteUrl
         foreach ($forkDetails as $composerName => $fork) {
             $json['repositories'][$composerName] = [
                 'type' => 'vcs',
