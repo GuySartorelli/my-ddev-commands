@@ -324,7 +324,7 @@ function setupComposerProject(): bool
     global $input, $projectName, $projectRoot;
     Output::step('Creating composer project');
 
-    ProjectCreatorHelper::shareComposerToken();
+    // ProjectCreatorHelper::shareComposerToken();
 
     // Run composer command
     Output::subStep('Running composer create-project');
@@ -361,7 +361,7 @@ function setupComposerProject(): bool
     Output::step('Adding additional composer dependencies');
     // We need to do this again, because it's only shared for as long as the container is up
     // and the container gets restarted as part of `ddev composer create-project` for some reason.
-    ProjectCreatorHelper::shareComposerToken();
+    // ProjectCreatorHelper::shareComposerToken();
 
     includeOptionalModule('silverstripe/frameworktest', (bool) $input->getOption('include-frameworktest'), isDev: true);
     includeOptionalModule('silverstripe/recipe-testing', (bool) $input->getOption('include-recipe-testing'), isDev: true);

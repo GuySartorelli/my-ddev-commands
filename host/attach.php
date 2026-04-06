@@ -201,7 +201,7 @@ if (!$success) {
     exit(1);
 }
 
-ProjectCreatorHelper::shareComposerToken();
+// ProjectCreatorHelper::shareComposerToken();
 
 if (in_array('--prefer-dist', $input->getOption('composer-option'))) {
     Output::warning('Using --prefer-dist. Git history will not be available when installing dependencies.');
