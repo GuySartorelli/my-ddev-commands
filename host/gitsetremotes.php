@@ -6,7 +6,7 @@
 ## Description: Set the various development remotes in the git project for the current working dir. Also adds a pre-push hook to modules in DDEV projects.
 ## Usage: remotes
 ## Example: "ddev remotes [options]"
-## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"rename-origin","Shorthand":"r","DefValue":"true","Usage":"Rename the 'origin' remote to 'orig'"},{"Name":"security","Shorthand":"s","Usage":"Add the security remote instead of the creative commoners remote"},{"Name":"fetch","Shorthand":"f","Usage":"Run git fetch after defining remotes"},{"Name":"no-hooks","Usage":"Skip adding pre-push hook"}]
+## Flags: [{"Name":"verbose","Shorthand":"v","Type":"bool","Usage":"verbose output"},{"Name":"no-rename-origin","Shorthand":"n","Usage":"Don't rename the 'origin' remote to 'orig'"},{"Name":"security","Shorthand":"s","Usage":"Add the security remote instead of the creative commoners remote"},{"Name":"fetch","Shorthand":"f","Usage":"Run git fetch after defining remotes"},{"Name":"no-hooks","Usage":"Skip adding pre-push hook"}]
 ## CanRunGlobally: true
 ## ExecRaw: false
 
